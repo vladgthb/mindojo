@@ -497,74 +497,122 @@ router.post('/from-sheet-url', validateGoogleCredentials, waterFlowController.an
  *         content:
  *           application/json:
  *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/WaterFlowResult'
- *                 - type: object
+ *               type: object
+ *               properties:
+ *                 cells:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/FlowCell'
+ *                   description: Cells where water can flow to both oceans
+ *                 stats:
+ *                   $ref: '#/components/schemas/WaterFlowStatistics'
+ *                 metadata:
+ *                   type: object
  *                   properties:
- *                     input:
+ *                     gridDimensions:
  *                       type: object
  *                       properties:
- *                         url:
- *                           type: string
- *                           description: Original URL provided
+ *                         rows:
+ *                           type: integer
+ *                         cols:
+ *                           type: integer
+ *                     algorithm:
+ *                       type: string
+ *                       example: "optimized-reverse-bfs"
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                     processingTime:
+ *                       type: integer
+ *                       description: Algorithm processing time in milliseconds
+ *                     pacificReachable:
+ *                       type: integer
+ *                       description: Number of cells reachable from Pacific
+ *                     atlanticReachable:
+ *                       type: integer
+ *                       description: Number of cells reachable from Atlantic
+ *                     intersection:
+ *                       type: integer
+ *                       description: Number of cells reachable from both oceans
+ *                     configuration:
+ *                       $ref: '#/components/schemas/WaterFlowOptions'
+ *                 input:
+ *                   type: object
+ *                   properties:
+ *                     url:
+ *                       type: string
+ *                       description: Original URL provided
+ *                     sheetId:
+ *                       type: string
+ *                       description: Extracted Google Sheets ID
+ *                     tabName:
+ *                       type: string
+ *                       description: Tab name used for analysis
+ *                     urlInfo:
+ *                       type: object
+ *                       description: Parsed URL metadata
+ *                       properties:
+ *                         isValid:
+ *                           type: boolean
  *                         sheetId:
  *                           type: string
- *                           description: Extracted Google Sheets ID
- *                         tabName:
+ *                         originalUrl:
  *                           type: string
- *                           description: Tab name used for analysis
- *                         urlInfo:
- *                           type: object
- *                           description: Parsed URL metadata
- *                     sheetInfo:
+ *                         isPublicLink:
+ *                           type: boolean
+ *                         accessType:
+ *                           type: string
+ *                 sheetInfo:
+ *                   type: object
+ *                   properties:
+ *                     sheetId:
+ *                       type: string
+ *                     tabName:
+ *                       type: string
+ *                     originalRange:
+ *                       type: string
+ *                       description: Range of data extracted from sheet
+ *                       example: "Sheet1!A1:E5"
+ *                     extractedGrid:
  *                       type: object
  *                       properties:
- *                         sheetId:
- *                           type: string
- *                         tabName:
- *                           type: string
- *                         originalRange:
- *                           type: string
- *                           description: Range of data extracted from sheet
- *                         extractedGrid:
- *                           type: object
- *                           properties:
- *                             originalRows:
- *                               type: integer
- *                               description: Rows in original sheet data
- *                             originalCols:
- *                               type: integer
- *                               description: Columns in original sheet data
- *                             processedRows:
- *                               type: integer
- *                               description: Rows after grid processing
- *                             processedCols:
- *                               type: integer
- *                               description: Columns after grid processing
- *                             totalCells:
- *                               type: integer
- *                               description: Total cells in processed grid
- *                     performance:
- *                       type: object
- *                       properties:
- *                         requestId:
- *                           type: string
- *                           description: Unique request identifier
- *                         sheetExtractionTime:
+ *                         originalRows:
  *                           type: integer
- *                           description: Time to extract data from Google Sheets (ms)
- *                         gridConversionTime:
+ *                           description: Rows in original sheet data
+ *                         originalCols:
  *                           type: integer
- *                           description: Time to convert sheet data to grid (ms)
- *                         algorithmProcessingTime:
+ *                           description: Columns in original sheet data
+ *                         processedRows:
  *                           type: integer
- *                           description: Time for water flow algorithm (ms)
- *                         totalTime:
+ *                           description: Rows after grid processing
+ *                         processedCols:
  *                           type: integer
- *                           description: Total processing time (ms)
- *                         timestamp:
- *                           type: string
- *                           format: date-time
+ *                           description: Columns after grid processing
+ *                         totalCells:
+ *                           type: integer
+ *                           description: Total cells in processed grid
+ *                 performance:
+ *                   type: object
+ *                   properties:
+ *                     requestId:
+ *                       type: string
+ *                       description: Unique request identifier
+ *                       example: "wf_1642248600000_abc123"
+ *                     sheetExtractionTime:
+ *                       type: integer
+ *                       description: Time to extract data from Google Sheets (ms)
+ *                     gridConversionTime:
+ *                       type: integer
+ *                       description: Time to convert sheet data to grid (ms)
+ *                     algorithmProcessingTime:
+ *                       type: integer
+ *                       description: Time for water flow algorithm (ms)
+ *                     totalTime:
+ *                       type: integer
+ *                       description: Total processing time (ms)
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
  *             examples:
  *               successful_analysis:
  *                 summary: Successful analysis result
@@ -577,21 +625,58 @@ router.post('/from-sheet-url', validateGoogleCredentials, waterFlowController.an
  *                     flowCells: 7
  *                     coverage: 0.28
  *                     processingTime: 15
+ *                     efficiency:
+ *                       cellsPerMs: 1666
+ *                       algorithmsComplexity: "O(5 × 5) = O(25)"
+ *                     oceanReachability:
+ *                       pacific: 12
+ *                       atlantic: 14
+ *                       intersection: 7
+ *                       pacificOnlyPercent: 0.20
+ *                       atlanticOnlyPercent: 0.28
+ *                       bothOceansPercent: 0.28
+ *                   metadata:
+ *                     gridDimensions:
+ *                       rows: 5
+ *                       cols: 5
+ *                     algorithm: "optimized-reverse-bfs"
+ *                     timestamp: "2024-01-15T10:30:00Z"
+ *                     processingTime: 15
+ *                     pacificReachable: 12
+ *                     atlanticReachable: 14
+ *                     intersection: 7
+ *                     configuration:
+ *                       pacificEdges: ["top", "left"]
+ *                       atlanticEdges: ["bottom", "right"]
+ *                       includeStats: true
+ *                       includePaths: false
  *                   input:
- *                     url: "https://docs.google.com/spreadsheets/d/1Bxi.../edit?usp=sharing"
+ *                     url: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing"
  *                     sheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
  *                     tabName: "Sheet1"
+ *                     urlInfo:
+ *                       isValid: true
+ *                       sheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+ *                       originalUrl: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing"
+ *                       isPublicLink: true
+ *                       accessType: "public_sharing"
  *                   sheetInfo:
+ *                     sheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+ *                     tabName: "Sheet1"
  *                     originalRange: "Sheet1!A1:E5"
  *                     extractedGrid:
+ *                       originalRows: 5
+ *                       originalCols: 5
  *                       processedRows: 5
  *                       processedCols: 5
  *                       totalCells: 25
  *                   performance:
+ *                     requestId: "wf_1642248600000_abc123"
  *                     sheetExtractionTime: 1200
  *                     gridConversionTime: 50
  *                     algorithmProcessingTime: 15
  *                     totalTime: 1265
+ *                     timestamp: "2024-01-15T10:30:00Z"
  *       400:
  *         description: Invalid URL or missing parameters
  *         content:
@@ -607,12 +692,15 @@ router.post('/from-sheet-url', validateGoogleCredentials, waterFlowController.an
  *               invalid_url:
  *                 summary: Invalid Google Sheets URL
  *                 value:
- *                   error: "Cannot extract Sheet ID from the provided URL"
+ *                   error: "Cannot extract Sheet ID from the provided URL. Please provide a valid Google Sheets URL."
  *                   code: "INVALID_SHEET_URL"
  *                   details:
+ *                     providedUrl: "https://invalid-url.com/document"
  *                     supportedFormats:
  *                       - "https://docs.google.com/spreadsheets/d/SHEET_ID/edit?usp=sharing"
  *                       - "https://docs.google.com/spreadsheets/d/SHEET_ID/edit"
+ *                       - "https://docs.google.com/spreadsheets/d/SHEET_ID/view"
+ *                     timestamp: "2024-01-15T10:30:00Z"
  *       403:
  *         description: Access denied to Google Sheet
  *         content:
@@ -623,10 +711,14 @@ router.post('/from-sheet-url', validateGoogleCredentials, waterFlowController.an
  *               access_denied:
  *                 summary: Sheet access denied
  *                 value:
- *                   error: "Access denied to the Google Sheet"
+ *                   error: "Access denied to the Google Sheet. Please ensure it is publicly accessible or shared with the service account."
  *                   code: "SHEET_ACCESS_DENIED"
  *                   details:
+ *                     url: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit"
+ *                     sheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+ *                     serviceAccountEmail: "your-service-account@project.iam.gserviceaccount.com"
  *                     solution: "Share the sheet with the service account or make it publicly viewable"
+ *                     timestamp: "2024-01-15T10:30:00Z"
  *       404:
  *         description: Sheet or tab not found
  *         content:
@@ -637,10 +729,14 @@ router.post('/from-sheet-url', validateGoogleCredentials, waterFlowController.an
  *               sheet_not_found:
  *                 summary: Sheet or tab not found
  *                 value:
- *                   error: "Sheet or tab not found"
+ *                   error: "Sheet or tab not found. Please check that the URL is correct and the sheet is accessible."
  *                   code: "SHEET_NOT_FOUND"
  *                   details:
- *                     suggestion: "Ensure the sheet is publicly accessible"
+ *                     url: "https://docs.google.com/spreadsheets/d/invalid-id/edit"
+ *                     sheetId: "invalid-id"
+ *                     tabName: "NonExistentTab"
+ *                     suggestion: "Ensure the sheet is publicly accessible or shared with your service account"
+ *                     timestamp: "2024-01-15T10:30:00Z"
  *       500:
  *         description: Processing error
  *         content:
