@@ -1,5 +1,14 @@
 # Mindojo - Island Water Flow Analysis
 
+> ## 🎥 **DEVELOPMENT VIDEO DEMONSTRATION**
+> 
+> **📹 Watch the complete development walkthrough and feature demonstration:**  
+> **[🔗 Development Video - Mindojo Water Flow Analysis](https://www.loom.com/share/4ff17c79566444a79ed2321d06d83292?sid=45c5bd33-f7c7-4018-8591-d381940ca2cb)**
+>
+> *This video shows the complete end-to-end integration, real Google Sheets data processing, and live water flow analysis in action.*
+
+---
+
 A comprehensive web application for analyzing topographical data and determining optimal water flow patterns on islands using the Pacific-Atlantic water flow algorithm.
 
 ![UI Screenshot](assets/UI.png)
