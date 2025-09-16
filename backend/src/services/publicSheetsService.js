@@ -120,48 +120,65 @@ class PublicSheetsService {
   }
 
   /**
-   * Get tab content from public sheet using CSV export
+   * Get tab content from public sheet using Google Sheets API by tab name
    * @param {string} sheetId - Google Sheets ID
-   * @param {string} gid - Tab GID (sheet ID within the spreadsheet)
+   * @param {string} tabNameOrGid - Tab name or GID
    * @returns {Promise<object>} - Tab content
    */
-  async getPublicTabContent(sheetId, gid = '0') {
+  async getPublicTabContent(sheetId, tabNameOrGid) {
     try {
-      const csvUrl = `${this.baseUrl}/${sheetId}/export?format=csv&gid=${gid}`;
+      console.log(`🔍 Fetching content for sheet ${sheetId}, tab: ${tabNameOrGid}`);
       
-      const response = await axios.get(csvUrl, {
-        timeout: 30000,
-        responseType: 'text'
-      });
-
-      if (response.status !== 200) {
-        throw new Error(`HTTP ${response.status}: Unable to access public sheet content`);
+      // First get the spreadsheet metadata to find the correct tab name
+      const spreadsheetData = await require('../config/googleAuth').getPublicSpreadsheetMetadata(sheetId);
+      
+      let targetTabName = tabNameOrGid;
+      
+      // If tabNameOrGid looks like a GID (numeric), find the corresponding tab name
+      if (/^\d+$/.test(tabNameOrGid)) {
+        const targetSheet = spreadsheetData.sheets.find(sheet => 
+          sheet.properties.sheetId.toString() === tabNameOrGid
+        );
+        if (targetSheet) {
+          targetTabName = targetSheet.properties.title;
+          console.log(`📝 Resolved GID ${tabNameOrGid} to tab name: ${targetTabName}`);
+        }
       }
+      
+      // Use Google Sheets API to get the values
+      const valuesData = await require('../config/googleAuth').getPublicSpreadsheetValues(sheetId, targetTabName);
+      
+      const data = valuesData.values || [];
+      const actualRowCount = data.length;
+      const actualColumnCount = data.length > 0 ? Math.max(...data.map(row => row.length)) : 0;
 
-      // Parse CSV content
-      const csvData = response.data;
-      const rows = this._parseCSV(csvData);
-
-      const actualRowCount = rows.length;
-      const actualColumnCount = rows.length > 0 ? Math.max(...rows.map(row => row.length)) : 0;
+      // Find the sheet properties for additional metadata
+      const targetSheet = spreadsheetData.sheets.find(sheet => 
+        sheet.properties.title === targetTabName
+      );
+      const gridProperties = targetSheet?.properties.gridProperties || {};
 
       return {
-        tabName: `Sheet_${gid}`,
-        gid,
-        data: rows,
+        tabName: targetTabName, // Real tab name from API
+        gid: targetSheet?.properties.sheetId?.toString() || tabNameOrGid,
+        range: valuesData.range,
+        data: data,
         metadata: {
+          rowCount: gridProperties.rowCount || 0,
+          columnCount: gridProperties.columnCount || 0,
           actualRowCount,
           actualColumnCount,
           lastUpdated: new Date().toISOString(),
-          hasHeaders: actualRowCount > 0 && rows[0].some(cell => 
+          hasHeaders: actualRowCount > 0 && data[0]?.some(cell => 
             typeof cell === 'string' && cell.trim().length > 0
           ),
-          accessMethod: 'csv_export'
+          accessMethod: 'google_sheets_api'
         },
         isPublic: true,
-        exportUrl: csvUrl
+        sheetProperties: targetSheet?.properties || {}
       };
     } catch (error) {
+      console.error(`❌ Failed to get public tab content: ${error.message}`);
       throw this._handlePublicAccessError(error, 'getPublicTabContent');
     }
   }

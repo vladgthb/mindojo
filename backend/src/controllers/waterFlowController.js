@@ -1,5 +1,6 @@
 const waterFlowService = require('../services/waterFlowService');
 const googleSheetsService = require('../services/googleSheetsService');
+const publicSheetsService = require('../services/publicSheetsService');
 const SheetUrlParser = require('../utils/sheetUrlParser');
 
 class WaterFlowController {
@@ -410,8 +411,25 @@ class WaterFlowController {
     const requestId = this._generateRequestId();
     const startTime = Date.now();
 
-    // Extract data from Google Sheets
-    const sheetData = await googleSheetsService.getTabContent(sheetId, tabName);
+    // Extract data from Google Sheets with fallback for JWT/authentication issues
+    let sheetData;
+    try {
+      sheetData = await googleSheetsService.getTabContent(sheetId, tabName);
+    } catch (authError) {
+      console.log(`⚠️ Primary Google Sheets service failed: ${authError.message}`);
+      
+      // Check if this is a JWT/authentication error that might work with public access
+      try {
+        // Try the public sheets service as fallback
+        sheetData = await publicSheetsService.getPublicTabContent(sheetId, tabName);
+        console.log('✅ Successfully used public sheets fallback');
+      } catch (publicError) {
+        console.error('❌ Both primary and public fallback failed');
+        console.error('Primary error:', authError.message);
+        console.error('Fallback error:', publicError.message);
+        throw authError; // Throw original error
+      }
+    }
     const extractionTime = Date.now() - startTime;
 
     // Convert sheet data to numeric grid
@@ -512,6 +530,40 @@ class WaterFlowController {
    */
   _generateRequestId() {
     return `wf_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  }
+
+  /**
+   * Check if an error is a JWT/authentication error that should trigger public fallback
+   * @param {Error} error - The error to check
+   * @returns {boolean} - True if it's a JWT/auth error
+   */
+  _isJWTAuthError(error) {
+    // Check for JWT signature errors
+    const isJWTError = error.message && (
+      error.message.includes('Invalid JWT') ||
+      error.message.includes('invalid_grant') ||
+      error.message.includes('JWT Signature') ||
+      error.message.includes('Service account')
+    );
+
+    // Check for authentication/authorization status codes
+    const isAuthStatusError = error.statusCode === 401 || error.statusCode === 403 || error.statusCode === 400;
+
+    // Check for Google API authentication errors
+    const isGoogleAuthError = error.code === 'AUTH_ERROR' || 
+                             error.code === 'ACCESS_DENIED' ||
+                             error.code === 'INVALID_REQUEST';
+
+    console.log(`🔍 JWT/Auth error check:`, {
+      isJWTError,
+      isAuthStatusError, 
+      isGoogleAuthError,
+      errorCode: error.code,
+      statusCode: error.statusCode,
+      message: error.message?.substring(0, 100)
+    });
+
+    return isJWTError || isAuthStatusError || isGoogleAuthError;
   }
 
   /**
