@@ -9,6 +9,60 @@ The Mindojo backend uses Google Service Account authentication to access Google 
 - Secure access using private keys
 - Proper scoping to read-only access to Google Sheets
 
+## Architecture Decision: Why Server-Side Integration?
+
+**Important:** Google Sheets API v4 does **NOT** support CORS (Cross-Origin Resource Sharing) configuration. You cannot enable direct browser access to Google Sheets API from frontend JavaScript.
+
+### Current Architecture (Recommended ✅)
+
+```
+Frontend Application
+        ↓ (HTTP requests with CORS enabled)
+Your Express Backend  
+        ↓ (Service Account authentication)
+Google Sheets API
+        ↓ (Server-to-server, no CORS needed)
+Google Sheets Data
+```
+
+### Why Direct Browser Access Doesn't Work
+
+❌ **This will always fail:**
+```javascript
+// Frontend JavaScript - BLOCKED by CORS policy
+fetch('https://sheets.googleapis.com/v4/spreadsheets/SHEET_ID', {
+  headers: { 'Authorization': 'Bearer TOKEN' }
+})
+// Error: Access blocked by CORS policy
+```
+
+❌ **No CORS configuration available:**
+- Google Cloud Console has no CORS settings for Sheets API
+- Google Sheets API endpoints don't send CORS headers
+- Browser security prevents direct API access
+
+### Benefits of Server-Side Approach
+
+✅ **Security**
+- API credentials never exposed to browser
+- No risk of credential theft from client-side code
+- Centralized authentication management
+
+✅ **Reliability**
+- Server-to-server communication bypasses CORS entirely
+- Built-in rate limiting and error handling
+- Consistent API behavior across environments
+
+✅ **Flexibility**
+- Can process/transform data before sending to frontend
+- Implement caching strategies to reduce API calls
+- Add business logic and data validation
+
+✅ **Performance**
+- Cache frequently accessed data
+- Minimize API quota usage
+- Optimize payload size for frontend
+
 ## Prerequisites
 
 - Google account
@@ -218,6 +272,70 @@ Open [http://localhost:3001/api-docs](http://localhost:3001/api-docs) to see all
 - ✅ **Use descriptive names** for easy identification
 - ✅ **Set up alerts** for unusual API usage patterns
 
+## Alternative Approaches (Not Recommended)
+
+If you absolutely need frontend access to Google Sheets, here are alternative approaches and their significant limitations:
+
+### Option 1: OAuth 2.0 with Google JavaScript SDK
+
+**Implementation:**
+```javascript
+// Requires user authentication and consent
+gapi.load('auth2', function() {
+  gapi.auth2.init({
+    client_id: 'YOUR_CLIENT_ID.apps.googleusercontent.com'
+  });
+});
+```
+
+**❌ Limitations:**
+- Every user must authenticate and grant permissions
+- Complex OAuth consent screen setup required
+- User experience disruption (login flow)
+- Token management complexity (refresh tokens, expiration)
+- Still limited by API quotas per user
+
+### Option 2: Google Apps Script Web App
+
+**Implementation:**
+- Create Google Apps Script with `doGet()`/`doPost()` functions
+- Deploy as web app with CORS enabled
+- Acts as proxy to Sheets API
+
+**❌ Limitations:**
+- Limited JavaScript runtime environment
+- Restricted execution time (6 minutes max)
+- Less control over error handling
+- Harder to maintain and debug
+- Google Apps Script learning curve
+
+### Option 3: Public Sheet CSV Export
+
+**Implementation:**
+```javascript
+// Only works for public sheets
+fetch('https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv&gid=0')
+```
+
+**❌ Limitations:**
+- Sheet must be publicly accessible (security risk)
+- CSV format only (no metadata, formulas, formatting)
+- No authentication or access control
+- Limited to simple data structures
+- No real-time updates
+
+### Why These Alternatives Are Problematic
+
+1. **Security Concerns:** Exposing credentials or making sheets public
+2. **User Experience:** Requiring authentication flows disrupts usability  
+3. **Maintenance Overhead:** More complex codebases and debugging
+4. **Limited Functionality:** Reduced feature set compared to full API access
+5. **Performance Issues:** No server-side caching or optimization
+
+### Recommendation: Stick with Server-Side Architecture
+
+The current server-side approach provides the best balance of security, performance, and maintainability. Your frontend can make simple HTTP requests to your backend, which handles all Google Sheets complexity.
+
 ## Available API Endpoints
 
 Once authentication is configured, these endpoints are available:
@@ -228,6 +346,24 @@ Once authentication is configured, these endpoints are available:
 | `GET` | `/api/sheets/{sheetId}/tabs` | List all tabs in a sheet |
 | `GET` | `/api/sheets/{sheetId}/tabs/{tabName}/content` | Get all content from a specific tab |
 | `POST` | `/api/sheets/validate` | Validate access to a sheet |
+
+### Frontend Integration Example
+
+```javascript
+// Frontend code - works perfectly with CORS
+async function getSheetTabs(sheetId) {
+  const response = await fetch(`/api/sheets/${sheetId}/tabs`);
+  const data = await response.json();
+  return data.tabs;
+}
+
+async function getTabContent(sheetId, tabName) {
+  const encodedTabName = encodeURIComponent(tabName);
+  const response = await fetch(`/api/sheets/${sheetId}/tabs/${encodedTabName}/content`);
+  const data = await response.json();
+  return data.data; // 2D array of cell values
+}
+```
 
 See the [Swagger documentation](http://localhost:3001/api-docs) for detailed request/response formats and examples.
 
