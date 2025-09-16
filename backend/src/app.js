@@ -35,6 +35,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Routes
 app.use('/api/sheets', require('./routes/sheets'));
+app.use('/api/water-flow', require('./routes/waterFlow'));
 
 /**
  * @swagger
@@ -77,28 +78,42 @@ app.get('/health', (req, res) => {
  */
 app.get('/api', (req, res) => {
   res.json({ 
-    message: 'Mindojo API Server - Phase 2 Complete ✅', 
-    phase: 2,
+    message: 'Mindojo API Server - Phase 3 Complete ✅', 
+    phase: 3,
     status: 'completed',
     features: [
       'Google Sheets API Integration',
       'Service Account Authentication', 
       'Shared URL Support',
-      'Base64 Credentials Support',
+      'Pacific-Atlantic Water Flow Algorithm',
+      'Optimized BFS Implementation',
+      'Batch Processing Support',
       'Comprehensive API Documentation'
     ],
+    algorithms: {
+      waterFlow: {
+        complexity: 'O(m × n)',
+        method: 'Reverse BFS from ocean borders',
+        supported: ['Direct grid analysis', 'Google Sheets integration', 'Batch processing']
+      }
+    },
     endpoints: {
-      traditional: [
+      sheets: [
         'GET /api/sheets/{id}/metadata',
         'GET /api/sheets/{id}/tabs', 
         'GET /api/sheets/{id}/tabs/{name}/content',
-        'POST /api/sheets/validate'
-      ],
-      urlBased: [
+        'POST /api/sheets/validate',
         'POST /api/sheets/parse-url',
         'POST /api/sheets/by-url',
         'POST /api/sheets/tabs-from-url',
         'POST /api/sheets/content-by-url'
+      ],
+      waterFlow: [
+        'POST /api/water-flow/analyze',
+        'POST /api/water-flow/from-sheet',
+        'POST /api/water-flow/from-sheet-url',
+        'POST /api/water-flow/batch',
+        'GET /api/water-flow/stats/{id}'
       ]
     },
     documentation: '/api-docs'
