@@ -431,6 +431,227 @@ router.post('/from-sheet-url', validateGoogleCredentials, waterFlowController.an
 
 /**
  * @swagger
+ * /api/water-flow/analyze-sheet-url:
+ *   post:
+ *     summary: Analyze water flow directly from Google Sheets public URL
+ *     description: |
+ *       **Simplified endpoint** that takes a Google Sheets URL and tab name, extracts the grid data,
+ *       and performs water flow analysis in one step. This is the most user-friendly endpoint for
+ *       frontend applications.
+ *       
+ *       **Process:**
+ *       1. Extract Sheet ID from the provided URL
+ *       2. Fetch elevation data from the specified tab
+ *       3. Convert sheet data to numeric grid format
+ *       4. Perform Pacific-Atlantic water flow analysis
+ *       5. Return comprehensive results with performance metrics
+ *       
+ *       **Supported URL formats:**
+ *       - `https://docs.google.com/spreadsheets/d/SHEET_ID/edit?usp=sharing`
+ *       - `https://docs.google.com/spreadsheets/d/SHEET_ID/edit`
+ *       - `https://docs.google.com/spreadsheets/d/SHEET_ID/view`
+ *       - And other Google Sheets URL variations
+ *       
+ *       **Requirements:**
+ *       - Sheet must be publicly accessible or shared with service account
+ *       - Tab must contain numeric elevation data
+ *       - Grid should be rectangular (consistent row lengths)
+ *     tags: [Water Flow Analysis]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - url
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: Public Google Sheets URL
+ *                 example: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing"
+ *               tabName:
+ *                 type: string
+ *                 description: Name of the tab containing elevation data
+ *                 default: "Sheet1"
+ *                 example: "Topography"
+ *               options:
+ *                 $ref: '#/components/schemas/WaterFlowOptions'
+ *           examples:
+ *             basic_analysis:
+ *               summary: Basic URL analysis with default tab
+ *               value:
+ *                 url: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing"
+ *             custom_tab:
+ *               summary: Analysis with specific tab and options
+ *               value:
+ *                 url: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit"
+ *                 tabName: "Island_Topography"
+ *                 options:
+ *                   includeStats: true
+ *                   pacificEdges: ["top", "left"]
+ *                   atlanticEdges: ["bottom", "right"]
+ *     responses:
+ *       200:
+ *         description: Water flow analysis completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/WaterFlowResult'
+ *                 - type: object
+ *                   properties:
+ *                     input:
+ *                       type: object
+ *                       properties:
+ *                         url:
+ *                           type: string
+ *                           description: Original URL provided
+ *                         sheetId:
+ *                           type: string
+ *                           description: Extracted Google Sheets ID
+ *                         tabName:
+ *                           type: string
+ *                           description: Tab name used for analysis
+ *                         urlInfo:
+ *                           type: object
+ *                           description: Parsed URL metadata
+ *                     sheetInfo:
+ *                       type: object
+ *                       properties:
+ *                         sheetId:
+ *                           type: string
+ *                         tabName:
+ *                           type: string
+ *                         originalRange:
+ *                           type: string
+ *                           description: Range of data extracted from sheet
+ *                         extractedGrid:
+ *                           type: object
+ *                           properties:
+ *                             originalRows:
+ *                               type: integer
+ *                               description: Rows in original sheet data
+ *                             originalCols:
+ *                               type: integer
+ *                               description: Columns in original sheet data
+ *                             processedRows:
+ *                               type: integer
+ *                               description: Rows after grid processing
+ *                             processedCols:
+ *                               type: integer
+ *                               description: Columns after grid processing
+ *                             totalCells:
+ *                               type: integer
+ *                               description: Total cells in processed grid
+ *                     performance:
+ *                       type: object
+ *                       properties:
+ *                         requestId:
+ *                           type: string
+ *                           description: Unique request identifier
+ *                         sheetExtractionTime:
+ *                           type: integer
+ *                           description: Time to extract data from Google Sheets (ms)
+ *                         gridConversionTime:
+ *                           type: integer
+ *                           description: Time to convert sheet data to grid (ms)
+ *                         algorithmProcessingTime:
+ *                           type: integer
+ *                           description: Time for water flow algorithm (ms)
+ *                         totalTime:
+ *                           type: integer
+ *                           description: Total processing time (ms)
+ *                         timestamp:
+ *                           type: string
+ *                           format: date-time
+ *             examples:
+ *               successful_analysis:
+ *                 summary: Successful analysis result
+ *                 value:
+ *                   cells:
+ *                     - {x: 4, y: 0, elevation: 5, coordinate: "(0,4)"}
+ *                     - {x: 0, y: 4, elevation: 5, coordinate: "(4,0)"}
+ *                   stats:
+ *                     totalCells: 25
+ *                     flowCells: 7
+ *                     coverage: 0.28
+ *                     processingTime: 15
+ *                   input:
+ *                     url: "https://docs.google.com/spreadsheets/d/1Bxi.../edit?usp=sharing"
+ *                     sheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+ *                     tabName: "Sheet1"
+ *                   sheetInfo:
+ *                     originalRange: "Sheet1!A1:E5"
+ *                     extractedGrid:
+ *                       processedRows: 5
+ *                       processedCols: 5
+ *                       totalCells: 25
+ *                   performance:
+ *                     sheetExtractionTime: 1200
+ *                     gridConversionTime: 50
+ *                     algorithmProcessingTime: 15
+ *                     totalTime: 1265
+ *       400:
+ *         description: Invalid URL or missing parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WaterFlowErrorResponse'
+ *             examples:
+ *               missing_url:
+ *                 summary: Missing URL parameter
+ *                 value:
+ *                   error: "Google Sheets URL is required in request body"
+ *                   code: "MISSING_SHEET_URL"
+ *               invalid_url:
+ *                 summary: Invalid Google Sheets URL
+ *                 value:
+ *                   error: "Cannot extract Sheet ID from the provided URL"
+ *                   code: "INVALID_SHEET_URL"
+ *                   details:
+ *                     supportedFormats:
+ *                       - "https://docs.google.com/spreadsheets/d/SHEET_ID/edit?usp=sharing"
+ *                       - "https://docs.google.com/spreadsheets/d/SHEET_ID/edit"
+ *       403:
+ *         description: Access denied to Google Sheet
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WaterFlowErrorResponse'
+ *             examples:
+ *               access_denied:
+ *                 summary: Sheet access denied
+ *                 value:
+ *                   error: "Access denied to the Google Sheet"
+ *                   code: "SHEET_ACCESS_DENIED"
+ *                   details:
+ *                     solution: "Share the sheet with the service account or make it publicly viewable"
+ *       404:
+ *         description: Sheet or tab not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WaterFlowErrorResponse'
+ *             examples:
+ *               sheet_not_found:
+ *                 summary: Sheet or tab not found
+ *                 value:
+ *                   error: "Sheet or tab not found"
+ *                   code: "SHEET_NOT_FOUND"
+ *                   details:
+ *                     suggestion: "Ensure the sheet is publicly accessible"
+ *       500:
+ *         description: Processing error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WaterFlowErrorResponse'
+ */
+router.post('/analyze-sheet-url', validateGoogleCredentials, waterFlowController.analyzeSheetUrl);
+
+/**
+ * @swagger
  * /api/water-flow/batch:
  *   post:
  *     summary: Analyze multiple grids in a single request

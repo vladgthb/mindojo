@@ -112,6 +112,7 @@ app.get('/api', (req, res) => {
         'POST /api/water-flow/analyze',
         'POST /api/water-flow/from-sheet',
         'POST /api/water-flow/from-sheet-url',
+        'POST /api/water-flow/analyze-sheet-url',
         'POST /api/water-flow/batch',
         'GET /api/water-flow/stats/{id}'
       ]

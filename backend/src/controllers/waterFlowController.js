@@ -8,6 +8,7 @@ class WaterFlowController {
     this.analyzeGrid = this.analyzeGrid.bind(this);
     this.analyzeFromSheet = this.analyzeFromSheet.bind(this);
     this.analyzeFromSheetUrl = this.analyzeFromSheetUrl.bind(this);
+    this.analyzeSheetUrl = this.analyzeSheetUrl.bind(this);
     this.batchAnalyze = this.batchAnalyze.bind(this);
     this.getAnalysisStats = this.getAnalysisStats.bind(this);
   }
@@ -168,6 +169,133 @@ class WaterFlowController {
       result.accessMethod = 'extracted_from_url';
 
       res.json(result);
+    } catch (error) {
+      this._handleError(res, error);
+    }
+  }
+
+  /**
+   * Analyze water flow directly from Google Sheets URL (simplified version)
+   * POST /api/water-flow/analyze-sheet-url
+   */
+  async analyzeSheetUrl(req, res) {
+    try {
+      const { url, tabName = 'Sheet1', options = {} } = req.body;
+
+      if (!url) {
+        return res.status(400).json({
+          error: 'Google Sheets URL is required in request body',
+          code: 'MISSING_SHEET_URL',
+          details: { timestamp: new Date().toISOString() }
+        });
+      }
+
+      // Parse URL to extract sheet ID
+      const sheetId = SheetUrlParser.extractSheetId(url);
+      
+      if (!sheetId) {
+        return res.status(400).json({
+          error: 'Cannot extract Sheet ID from the provided URL. Please provide a valid Google Sheets URL.',
+          code: 'INVALID_SHEET_URL',
+          details: {
+            providedUrl: url,
+            supportedFormats: [
+              'https://docs.google.com/spreadsheets/d/SHEET_ID/edit?usp=sharing',
+              'https://docs.google.com/spreadsheets/d/SHEET_ID/edit',
+              'https://docs.google.com/spreadsheets/d/SHEET_ID/view'
+            ],
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+
+      const requestId = this._generateRequestId();
+      const startTime = Date.now();
+
+      console.log(`[WaterFlow] Starting URL analysis ${requestId} for ${url} (tab: ${tabName})`);
+
+      try {
+        // Extract data from Google Sheets
+        const sheetData = await googleSheetsService.getTabContent(sheetId, tabName);
+        const extractionTime = Date.now() - startTime;
+
+        // Convert sheet data to numeric grid
+        const grid = this._convertSheetDataToGrid(sheetData.data);
+        const conversionTime = Date.now() - startTime - extractionTime;
+
+        // Perform water flow analysis
+        const analysisStartTime = Date.now();
+        const result = await waterFlowService.analyzeWaterFlow(grid, options);
+        const analysisTime = Date.now() - analysisStartTime;
+
+        // Build comprehensive response
+        const response = {
+          ...result,
+          input: {
+            url,
+            sheetId,
+            tabName,
+            urlInfo: SheetUrlParser.parseSheetUrl(url)
+          },
+          sheetInfo: {
+            sheetId,
+            tabName,
+            originalRange: sheetData.range,
+            extractedGrid: {
+              originalRows: sheetData.data.length,
+              originalCols: sheetData.data[0]?.length || 0,
+              processedRows: grid.length,
+              processedCols: grid[0]?.length || 0,
+              totalCells: grid.length * (grid[0]?.length || 0)
+            }
+          },
+          performance: {
+            requestId,
+            sheetExtractionTime: extractionTime,
+            gridConversionTime: conversionTime,
+            algorithmProcessingTime: analysisTime,
+            totalTime: Date.now() - startTime,
+            timestamp: new Date().toISOString()
+          }
+        };
+
+        console.log(`[WaterFlow] Completed URL analysis ${requestId} in ${response.performance.totalTime}ms`);
+
+        res.json(response);
+
+      } catch (sheetError) {
+        // Enhanced error handling for sheet access issues
+        if (sheetError.code === 'SHEET_NOT_FOUND' || sheetError.statusCode === 404) {
+          return res.status(404).json({
+            error: 'Sheet or tab not found. Please check that the URL is correct and the sheet is accessible.',
+            code: 'SHEET_NOT_FOUND',
+            details: {
+              url,
+              sheetId,
+              tabName,
+              suggestion: 'Ensure the sheet is publicly accessible or shared with your service account',
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+
+        if (sheetError.code === 'ACCESS_DENIED' || sheetError.statusCode === 403) {
+          return res.status(403).json({
+            error: 'Access denied to the Google Sheet. Please ensure it is publicly accessible or shared with the service account.',
+            code: 'SHEET_ACCESS_DENIED',
+            details: {
+              url,
+              sheetId,
+              serviceAccountEmail: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+              solution: 'Share the sheet with the service account or make it publicly viewable',
+              timestamp: new Date().toISOString()
+            }
+          });
+        }
+
+        throw sheetError; // Re-throw other errors
+      }
+
     } catch (error) {
       this._handleError(res, error);
     }
