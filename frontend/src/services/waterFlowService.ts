@@ -112,7 +112,7 @@ class WaterFlowService {
     tabName: string = 'Sheet1',
     options: WaterFlowOptions = {}
   ): Promise<ApiResponse<WaterFlowResult>> {
-    return apiClient.post<WaterFlowResult>('/api/water-flow/analyze-sheet-url', {
+    return apiClient.post<WaterFlowResult>('/api/water-flow/from-sheet-url', {
       url,
       tabName,
       options: {

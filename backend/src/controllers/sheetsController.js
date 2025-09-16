@@ -194,8 +194,6 @@ class SheetsController {
           
           try {
             tabs = await publicSheetsService.getPublicSheetTabs(sheetId);
-            console.log('vlad:::tabs');
-            console.log(tabs);
             console.log('✅ Public sheets service successful with real tab names');
             accessMethod = 'public_sheets_api';
             fallbackUsed = true;
