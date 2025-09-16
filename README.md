@@ -27,9 +27,9 @@ Mindojo is a sophisticated full-stack application that analyzes topographical da
 
 ## 📸 Project Screenshots
 
-| Interface            | API Documentation              | Architecture |
-|----------------------|--------------------------------|--------------|
-| ![UI](assets/UI.png) | ![Swagger](assets/SWAGGER.png) | ![Architecture](docs/images/architecture-diagram.png) |
+| Interface            | API Documentation              | Architecture                        |
+|----------------------|--------------------------------|-------------------------------------|
+| ![UI](assets/UI.png) | ![Swagger](assets/SWAGGER.png) | ![Architecture](assets/DIAGRAM.png) |
 
 ## 🏗️ System Architecture
 
