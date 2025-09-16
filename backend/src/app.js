@@ -26,6 +26,9 @@ app.use(express.urlencoded({ extended: true }));
 // Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Routes
+app.use('/api/sheets', require('./routes/sheets'));
+
 /**
  * @swagger
  * /health:
@@ -66,7 +69,7 @@ app.get('/health', (req, res) => {
  *               $ref: '#/components/schemas/ApiResponse'
  */
 app.get('/api', (req, res) => {
-  res.json({ message: 'Mindojo API Server - Phase 1' });
+  res.json({ message: 'Mindojo API Server - Phase 2 (Google Sheets Integration)' });
 });
 
 // 404 handler
