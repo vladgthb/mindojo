@@ -72,21 +72,49 @@ class PublicSheetsService {
    */
   async getPublicSheetTabs(sheetId) {
     try {
-      // For public sheets, we can try to detect tabs by checking different gids
-      // This is a heuristic approach since we can't use the API
+      console.log(`🔍 Getting public sheet tabs for: ${sheetId}`);
       
-      const detectedTabs = await this._detectPublicTabs(sheetId);
+      // Use the new method that follows the Python example logic
+      // This gets actual sheet names instead of "Sheet_X"
+      const tabsList = await require('../config/googleAuth').getPublicSheetTabsList(sheetId);
+      
+      if (!tabsList || tabsList.length === 0) {
+        throw new Error('No tabs found in the public spreadsheet');
+      }
+
+      // Also get the spreadsheet title
+      const metadata = await require('../config/googleAuth').getPublicSpreadsheetMetadata(sheetId);
+      
+      // Format the response to match expected structure
+      const tabs = tabsList.map(tab => ({
+        id: tab.sheetId,
+        gid: tab.gid,
+        name: tab.title, // Real sheet name from API (not "Sheet_X")
+        index: tab.index,
+        rowCount: tab.rowCount,
+        columnCount: tab.columnCount,
+        accessible: true,
+        detectionMethod: 'google_sheets_api',
+        gridProperties: tab.gridProperties,
+        sheetType: tab.sheetType,
+        hidden: tab.hidden
+      }));
+
+      console.log(`✅ Retrieved ${tabs.length} tabs with real names:`);
+      tabs.forEach(tab => console.log(`  - "${tab.name}" (GID: ${tab.gid})`));
       
       return {
         sheetId,
-        title: `Public Sheet ${sheetId}`,
-        tabs: detectedTabs,
+        title: metadata.properties.title,
+        tabs,
         isPublic: true,
-        accessMethod: 'public_detection',
+        accessMethod: 'google_sheets_api_key',
         lastUpdated: new Date().toISOString(),
-        note: 'Tab detection for public sheets is limited. Only accessible tabs are shown.'
+        note: 'Tabs retrieved using Google Sheets API with actual sheet names',
+        verified: true
       };
     } catch (error) {
+      console.error(`❌ Failed to get public sheet tabs: ${error.message}`);
       throw this._handlePublicAccessError(error, 'getPublicSheetTabs');
     }
   }

@@ -118,6 +118,59 @@ class GoogleAuthClient {
   }
 
   /**
+   * Get tabs list with actual sheet names using API key (following Python example logic)
+   * Equivalent to: service.spreadsheets().get(spreadsheetId=id, fields='sheets.properties(sheetId,title)').execute()
+   */
+  async getPublicSheetTabsList(spreadsheetId) {
+    if (!this.apiKey) {
+      throw new Error('Google API Key not configured for public sheet access');
+    }
+
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`;
+      const response = await axios.get(url, {
+        params: {
+          key: this.apiKey,
+          fields: 'sheets.properties(sheetId,title,index,gridProperties,sheetType,hidden)'
+        },
+        timeout: 10000
+      });
+
+      const sheets = response.data.sheets || [];
+      
+      if (sheets.length === 0) {
+        console.warn('⚠️ No sheets found in the spreadsheet');
+        return [];
+      }
+
+      const tabsList = sheets.map((sheet, index) => {
+        const properties = sheet.properties;
+        return {
+          title: properties.title, // Real sheet name from API (not "Sheet_X")
+          sheetId: properties.sheetId, // This is the GID
+          gid: properties.sheetId.toString(),
+          index: properties.index !== undefined ? properties.index : index,
+          rowCount: properties.gridProperties?.rowCount || 0,
+          columnCount: properties.gridProperties?.columnCount || 0,
+          gridProperties: properties.gridProperties || {},
+          sheetType: properties.sheetType || 'GRID',
+          hidden: properties.hidden || false
+        };
+      });
+
+      console.log('✅ Retrieved sheet tabs list:');
+      tabsList.forEach(tab => {
+        console.log(`  - Title: "${tab.title}", Sheet ID (GID): ${tab.sheetId}`);
+      });
+
+      return tabsList;
+    } catch (error) {
+      console.error('❌ Failed to get tabs list:', error.response?.data || error.message);
+      throw new Error(`Failed to get sheet tabs: ${error.response?.data?.error?.message || error.message}`);
+    }
+  }
+
+  /**
    * Get spreadsheet values using API key (for public sheets)
    */
   async getPublicSpreadsheetValues(spreadsheetId, range) {

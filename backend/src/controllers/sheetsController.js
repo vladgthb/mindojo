@@ -173,22 +173,37 @@ class SheetsController {
       let fallbackUsed = false;
 
       try {
-        // Try authenticated access first
+        // Try the enhanced Google Sheets service first (has dual authentication: service account + API key)
         tabs = await googleSheetsService.getSheetTabs(sheetId);
+        
+        // Check if it used API key (indicates public sheet access)
+        if (tabs.accessMethod === 'api_key') {
+          accessMethod = 'api_key_public';
+          console.log(`✅ Successfully accessed public sheet via Google API key: ${sheetId}`);
+        } else {
+          console.log(`✅ Successfully accessed sheet via service account: ${sheetId}`);
+        }
       } catch (authError) {
-        // If authenticated access fails and this appears to be a public URL, try public access
+        console.log(`⚠️ Enhanced Google Sheets service failed: ${authError.message}`);
+        
+        // If the enhanced service fails and this appears to be a public URL, try the new public method
         const urlInfo = SheetUrlParser.parseSheetUrl(url);
         
         if (urlInfo.isPublicLink || publicSheetsService.constructor.isPublicSharingUrl(url)) {
-          console.log(`Authenticated access failed for ${sheetId}, trying public access...`);
+          console.log(`Trying enhanced public sheets method for: ${sheetId}`);
           
           try {
             tabs = await publicSheetsService.getPublicSheetTabs(sheetId);
-            accessMethod = 'public_fallback';
+            console.log('vlad:::tabs');
+            console.log(tabs);
+            console.log('✅ Public sheets service successful with real tab names');
+            accessMethod = 'public_sheets_api';
             fallbackUsed = true;
           } catch (publicError) {
             // If both methods fail, throw the original authenticated error
-            console.error(`Both authenticated and public access failed for ${sheetId}`);
+            console.error(`❌ All access methods failed for ${sheetId}`);
+            console.error('Enhanced service error:', authError.message);
+            console.error('Public service error:', publicError.message);
             throw authError;
           }
         } else {
