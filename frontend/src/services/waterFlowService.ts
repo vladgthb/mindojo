@@ -1,7 +1,7 @@
 // Water Flow Analysis API service
 
-import { apiClient, ApiResponse } from './api';
-import { WaterFlowResult, WaterFlowOptions } from '../types';
+import { apiClient, type ApiResponse } from './api';
+import type { WaterFlowResult, WaterFlowOptions } from '../types';
 
 export interface AnalyzeGridRequest {
   grid: number[][];

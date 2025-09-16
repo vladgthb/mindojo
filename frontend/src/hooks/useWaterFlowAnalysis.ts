@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { waterFlowService } from '../services/waterFlowService';
 import { mockService } from '../services/mockService';
-import { WaterFlowResult, WaterFlowOptions } from '../types';
+import type { WaterFlowResult, WaterFlowOptions } from '../types';
 import { isApiError } from '../services/api';
 
 // Toggle for using mock data during development
@@ -200,9 +200,7 @@ export const useWaterFlowAnalysis = () => {
 
   // Get default options
   const getDefaultOptions = useCallback((): WaterFlowOptions => {
-    return USE_MOCK_DATA 
-      ? mockService.getDefaultOptions?.() || waterFlowService.getDefaultOptions()
-      : waterFlowService.getDefaultOptions();
+    return waterFlowService.getDefaultOptions();
   }, []);
 
   // Get analysis summary

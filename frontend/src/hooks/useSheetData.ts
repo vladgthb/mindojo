@@ -1,9 +1,9 @@
 // Hook for Google Sheets data management
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { sheetsService } from '../services/sheetsService';
 import { mockService } from '../services/mockService';
-import { SheetMetadata, SheetTab, UrlInfo } from '../types';
+import type { SheetMetadata, SheetTab } from '../types';
 import { isApiError } from '../services/api';
 
 // Toggle for using mock data during development

@@ -1,7 +1,7 @@
 // Mock service for development and testing
 
-import { ApiResponse } from './api';
-import { 
+import type { ApiResponse } from './api';
+import type {
   SheetMetadata, 
   WaterFlowResult, 
   UrlInfo,
@@ -51,11 +51,11 @@ class MockService {
     return this.mockResponse(mockData);
   }
 
-  async getSheetFromUrl(url: string): Promise<ApiResponse<SheetMetadata>> {
+  async getSheetFromUrl(): Promise<ApiResponse<SheetMetadata>> {
     return this.mockResponse(mockSheetMetadata);
   }
 
-  async getTabsFromUrl(url: string): Promise<ApiResponse<SheetMetadata>> {
+  async getTabsFromUrl(): Promise<ApiResponse<SheetMetadata>> {
     return this.mockResponse(mockSheetMetadata);
   }
 
@@ -122,8 +122,7 @@ class MockService {
 
   async analyzeSheetUrl(
     url: string,
-    tabName: string = 'Island_5x5',
-    options: WaterFlowOptions = {}
+    tabName: string = 'Island_5x5'
   ): Promise<ApiResponse<WaterFlowResult>> {
     // Use predefined mock data for known tab names
     const availableGrids = Object.keys(mockGrids);
@@ -131,28 +130,18 @@ class MockService {
     
     const mockResult = createMockWaterFlowResult(gridName);
     
-    // Override options if provided
-    if (Object.keys(options).length > 0) {
-      mockResult.metadata.configuration = {
-        ...mockResult.metadata.configuration,
-        ...options
-      };
-    }
-
     return this.mockResponse(mockResult);
   }
 
   async analyzeFromSheetUrl(
     url: string,
-    tabName: string = 'Island_5x5',
-    options: WaterFlowOptions = {}
+    tabName: string = 'Island_5x5'
   ): Promise<ApiResponse<WaterFlowResult>> {
-    return this.analyzeSheetUrl(url, tabName, options);
+    return this.analyzeSheetUrl(url, tabName);
   }
 
   async batchAnalyze(
-    grids: number[][][],
-    options: WaterFlowOptions = {}
+    grids: number[][][]
   ): Promise<ApiResponse<any>> {
     await this.delay();
     

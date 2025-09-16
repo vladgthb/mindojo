@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ThemeProvider,
   CssBaseline,
   Container,
-  Box,
-  Grid2 as Grid,
   Button,
   Alert,
   Snackbar,
   Paper,
   Typography,
   Stack,
-  Fab
+  Fab,
+  Box
 } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
 import { PlayArrow as PlayIcon, Refresh as RefreshIcon } from '@mui/icons-material';
@@ -26,7 +25,7 @@ import { TabSelector } from './components/forms/TabSelector';
 import { GridVisualization } from './components/visualization/GridVisualization';
 import { StatsSummary } from './components/common/StatsSummary';
 import { ResultsTable } from './components/common/ResultsTable';
-import { LoadingState, AnalysisLoadingState } from './components/common/LoadingState';
+import { AnalysisLoadingState } from './components/common/LoadingState';
 
 // Hooks
 import { useAppState } from './hooks/useAppState';
@@ -59,11 +58,9 @@ function App() {
 
   // Sheet data management
   const {
-    isValidating,
     isLoadingTabs,
     urlValidation,
     tabs,
-    sheetMetadata,
     error: sheetError,
     validateUrl,
     loadTabs,
@@ -213,147 +210,135 @@ function App() {
 
         {/* Main Content */}
         <Container maxWidth="xl" sx={{ py: 3 }}>
-          <Grid container spacing={3}>
+          <Stack spacing={3}>
             {/* URL Input Section */}
-            <Grid xs={12}>
-              <UrlInputForm
-                url={sheetUrl || ''}
-                onUrlChange={handleUrlChange}
-                onUrlSubmit={handleUrlSubmit}
-                validation={{
-                  isValid: urlValidation.isValid,
-                  isValidating: urlValidation.isValidating,
-                  error: urlValidation.error
-                }}
-                isLoading={isLoadingTabs}
-                disabled={appLoading}
-              />
-            </Grid>
+            <UrlInputForm
+              url={sheetUrl || ''}
+              onUrlChange={handleUrlChange}
+              onUrlSubmit={handleUrlSubmit}
+              validation={{
+                isValid: urlValidation.isValid,
+                isValidating: urlValidation.isValidating,
+                error: urlValidation.error
+              }}
+              isLoading={isLoadingTabs}
+              disabled={appLoading}
+            />
 
             {/* Tab Selection */}
             {tabs.length > 0 && (
-              <Grid xs={12}>
-                <TabSelector
-                  tabs={tabs}
-                  selectedTab={selectedTab}
-                  onTabSelect={setSelectedTab}
-                  isLoading={isLoadingTabs}
-                  disabled={appLoading}
-                  error={sheetError}
-                />
-              </Grid>
+              <TabSelector
+                tabs={tabs}
+                selectedTab={selectedTab}
+                onTabSelect={setSelectedTab}
+                isLoading={isLoadingTabs}
+                disabled={appLoading}
+                error={sheetError}
+              />
             )}
 
             {/* Analysis Button */}
             {canAnalyze && (
-              <Grid xs={12}>
-                <Paper sx={{ p: 3, textAlign: 'center' }}>
-                  <Stack direction="row" spacing={2} justifyContent="center">
-                    <Button
-                      variant="contained"
-                      size="large"
-                      startIcon={<PlayIcon />}
-                      onClick={handleRunAnalysis}
-                      disabled={isAnalyzing || appLoading}
-                      sx={{ minWidth: 200 }}
-                    >
-                      {isAnalyzing ? 'Analyzing...' : 'Run Water Flow Analysis'}
-                    </Button>
-                    
-                    <Button
-                      variant="outlined"
-                      size="large"
-                      startIcon={<RefreshIcon />}
-                      onClick={handleReset}
-                      disabled={isAnalyzing || appLoading}
-                    >
-                      Reset
-                    </Button>
-                  </Stack>
+              <Paper sx={{ p: 3, textAlign: 'center' }}>
+                <Stack direction="row" spacing={2} justifyContent="center">
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<PlayIcon />}
+                    onClick={handleRunAnalysis}
+                    disabled={isAnalyzing || appLoading}
+                    sx={{ minWidth: 200 }}
+                  >
+                    {isAnalyzing ? 'Analyzing...' : 'Run Water Flow Analysis'}
+                  </Button>
                   
-                  {selectedTab && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      Ready to analyze "{selectedTab}" tab
-                    </Typography>
-                  )}
-                </Paper>
-              </Grid>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    startIcon={<RefreshIcon />}
+                    onClick={handleReset}
+                    disabled={isAnalyzing || appLoading}
+                  >
+                    Reset
+                  </Button>
+                </Stack>
+                
+                {selectedTab && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Ready to analyze "{selectedTab}" tab
+                  </Typography>
+                )}
+              </Paper>
             )}
 
             {/* Analysis Loading State */}
             {isAnalyzing && (
-              <Grid xs={12}>
-                <AnalysisLoadingState />
-              </Grid>
+              <AnalysisLoadingState />
             )}
 
             {/* Results Section */}
             {analysisResults && !isAnalyzing && (
-              <>
+              <Stack spacing={3}>
                 {/* Statistics Summary */}
-                <Grid xs={12}>
-                  <StatsSummary 
-                    stats={analysisResults.stats} 
-                    metadata={analysisResults.metadata}
-                  />
-                </Grid>
+                <StatsSummary 
+                  stats={analysisResults.stats} 
+                  metadata={analysisResults.metadata}
+                />
 
                 {/* Grid Visualization and Results Table */}
-                <Grid xs={12} lg={6}>
-                  <GridVisualization
-                    grid={analysisResults.input ? 
-                      mockService.getGridData(analysisResults.input.tabName) || [[1]] :
-                      [[1]]
-                    }
-                    qualifyingCells={analysisResults.cells}
-                    title="Water Flow Visualization"
-                    showElevation={true}
-                    enableZoom={true}
-                  />
-                </Grid>
+                <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
+                  <Box sx={{ flex: 1 }}>
+                    <GridVisualization
+                      grid={analysisResults.input ? 
+                        mockService.getGridData(analysisResults.input.tabName) || [[1]] :
+                        [[1]]
+                      }
+                      qualifyingCells={analysisResults.cells}
+                      title="Water Flow Visualization"
+                      showElevation={true}
+                      enableZoom={true}
+                    />
+                  </Box>
 
-                <Grid xs={12} lg={6}>
-                  <ResultsTable 
-                    cells={analysisResults.cells}
-                    isLoading={false}
-                  />
-                </Grid>
-              </>
+                  <Box sx={{ flex: 1 }}>
+                    <ResultsTable 
+                      cells={analysisResults.cells}
+                      isLoading={false}
+                    />
+                  </Box>
+                </Box>
+              </Stack>
             )}
 
             {/* Error Messages */}
             {(sheetError || analysisError) && (
-              <Grid xs={12}>
-                <Alert 
-                  severity="error" 
-                  onClose={() => {
-                    clearSheetError();
-                    clearAnalysisError();
-                  }}
-                >
-                  {sheetError || analysisError}
-                </Alert>
-              </Grid>
+              <Alert 
+                severity="error" 
+                onClose={() => {
+                  clearSheetError();
+                  clearAnalysisError();
+                }}
+              >
+                {sheetError || analysisError}
+              </Alert>
             )}
 
             {/* Empty State */}
             {!sheetUrl && !isLoadingTabs && (
-              <Grid xs={12}>
-                <Paper sx={{ p: 6, textAlign: 'center', bgcolor: 'background.paper' }}>
-                  <Typography variant="h5" color="text.secondary" gutterBottom>
-                    Welcome to Island Water Flow Analysis
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                    Enter a Google Sheets URL above to get started with analyzing water flow patterns.
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    This tool determines which grid cells allow water to flow to both Pacific and Atlantic oceans
-                    using an optimized reverse BFS algorithm.
-                  </Typography>
-                </Paper>
-              </Grid>
+              <Paper sx={{ p: 6, textAlign: 'center', bgcolor: 'background.paper' }}>
+                <Typography variant="h5" color="text.secondary" gutterBottom>
+                  Welcome to Island Water Flow Analysis
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                  Enter a Google Sheets URL above to get started with analyzing water flow patterns.
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  This tool determines which grid cells allow water to flow to both Pacific and Atlantic oceans
+                  using an optimized reverse BFS algorithm.
+                </Typography>
+              </Paper>
             )}
-          </Grid>
+          </Stack>
         </Container>
 
         {/* Export FAB */}

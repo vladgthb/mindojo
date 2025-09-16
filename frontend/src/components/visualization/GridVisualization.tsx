@@ -20,7 +20,7 @@ import {
   CenterFocusStrong as CenterIcon,
   Palette as PaletteIcon
 } from '@mui/icons-material';
-import { FlowCell, GridVisualizationProps } from '../../types';
+import type { GridVisualizationProps } from '../../types';
 import { gridColors } from '../../theme';
 
 interface GridCell {

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { AppState, SheetTab, WaterFlowResult } from '../types';
+import type { AppState, SheetTab, WaterFlowResult } from '../types';
 
 const initialState: AppState = {
   sheetUrl: null,

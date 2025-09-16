@@ -19,8 +19,9 @@ import {
   ContentCopy as CopyIcon,
   Sort as SortIcon
 } from '@mui/icons-material';
-import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
-import { FlowCell, ResultsTableProps } from '../../types';
+import { DataGrid } from '@mui/x-data-grid';
+import type { GridColDef } from '@mui/x-data-grid';
+import type { ResultsTableProps } from '../../types';
 
 type SortField = 'coordinate' | 'row' | 'column' | 'elevation';
 type SortDirection = 'asc' | 'desc';
@@ -97,14 +98,14 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
       headerName: 'Row',
       width: 80,
       type: 'number',
-      valueGetter: (params: GridValueGetterParams) => params.row.y,
+      valueGetter: (params) => params.row.y,
     },
     {
       field: 'column',
       headerName: 'Column', 
       width: 80,
       type: 'number',
-      valueGetter: (params: GridValueGetterParams) => params.row.x,
+      valueGetter: (params) => params.row.x,
     },
     {
       field: 'elevation',
@@ -120,7 +121,7 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
   ];
 
   // DataGrid rows with unique IDs
-  const rows = processedCells.map((cell, index) => ({
+  const rows = processedCells.map((cell) => ({
     id: `${cell.y}-${cell.x}`,
     ...cell,
   }));

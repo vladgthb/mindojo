@@ -6,7 +6,6 @@ import {
   IconButton,
   Box,
   Tooltip,
-  useTheme
 } from '@mui/material';
 import {
   Brightness4,
@@ -25,8 +24,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   darkMode,
   onToggleTheme,
 }) => {
-  const theme = useTheme();
-
   const handleGitHubClick = () => {
     // In a real app, this would open the project's GitHub repository
     console.log('GitHub repository link');

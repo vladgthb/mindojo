@@ -3,7 +3,7 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid2 as Grid,
+  Grid,
   Box,
   Chip,
   Stack,
@@ -20,7 +20,7 @@ import {
   Info as InfoIcon,
   Download as DownloadIcon
 } from '@mui/icons-material';
-import { StatsSummaryProps } from '../../types';
+import type { StatsSummaryProps } from '../../types';
 
 export const StatsSummary: React.FC<StatsSummaryProps> = ({ 
   stats, 

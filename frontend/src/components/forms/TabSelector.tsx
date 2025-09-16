@@ -12,13 +12,13 @@ import {
   Stack,
   Skeleton,
   Alert,
-  SelectChangeEvent
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import {
   Tab as TabIcon,
   TableChart as TableIcon
 } from '@mui/icons-material';
-import { SheetTab } from '../../types';
+import type { SheetTab } from '../../types';
 
 interface TabSelectorProps {
   tabs: SheetTab[];

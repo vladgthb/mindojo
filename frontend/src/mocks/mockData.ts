@@ -1,12 +1,11 @@
 // Mock data for development and testing
 
-import { 
+import type { 
   SheetMetadata, 
   WaterFlowResult, 
   FlowCell, 
   MockGrid, 
-  MockSheetData,
-  UrlInfo 
+  MockSheetData
 } from '../types';
 
 // Mock Google Sheets data
