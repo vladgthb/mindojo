@@ -12,7 +12,6 @@ import {
   Fab,
   Box
 } from '@mui/material';
-import { BrowserRouter } from 'react-router-dom';
 import { PlayArrow as PlayIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 
 // Theme
@@ -181,9 +180,8 @@ function App() {
   const usingMockData = useSheetMockData || useAnalysisMockData;
 
   return (
-    <BrowserRouter>
-      <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
-        <CssBaseline />
+    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
+      <CssBaseline />
         
         {/* Demo Mode Banner */}
         {usingMockData && (
@@ -366,8 +364,7 @@ function App() {
             {snackbar.message}
           </Alert>
         </Snackbar>
-      </ThemeProvider>
-    </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
