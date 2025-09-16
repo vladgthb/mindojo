@@ -13,19 +13,17 @@ class GoogleSheetsService {
 
   async getSheetMetadata(spreadsheetId) {
     try {
-      await this.ensureInitialized();
+      // Use dual authentication strategy
+      const result = await googleAuthClient.getSpreadsheetWithFallback(spreadsheetId, 'metadata');
       
-      const response = await this.sheets.spreadsheets.get({
-        spreadsheetId,
-        fields: 'properties,sheets.properties'
-      });
-
       return {
         id: spreadsheetId,
-        title: response.data.properties.title,
-        locale: response.data.properties.locale,
-        timeZone: response.data.properties.timeZone,
-        properties: response.data.properties,
+        title: result.data.properties.title,
+        locale: result.data.properties.locale,
+        timeZone: result.data.properties.timeZone,
+        properties: result.data.properties,
+        authMethod: result.authMethod,
+        isPublic: result.isPublic,
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
@@ -35,27 +33,32 @@ class GoogleSheetsService {
 
   async getSheetTabs(spreadsheetId) {
     try {
-      await this.ensureInitialized();
+      // Use dual authentication strategy  
+      const result = await googleAuthClient.getSpreadsheetWithFallback(spreadsheetId, 'metadata');
       
-      const response = await this.sheets.spreadsheets.get({
-        spreadsheetId,
-        fields: 'properties.title,sheets.properties'
-      });
-
-      const tabs = response.data.sheets.map(sheet => ({
+      const tabs = result.data.sheets.map(sheet => ({
         id: sheet.properties.sheetId,
+        gid: sheet.properties.sheetId.toString(),
         name: sheet.properties.title,
         index: sheet.properties.index,
         rowCount: sheet.properties.gridProperties?.rowCount || 0,
         columnCount: sheet.properties.gridProperties?.columnCount || 0,
-        gridProperties: sheet.properties.gridProperties || {}
+        gridProperties: sheet.properties.gridProperties || {},
+        accessible: true,
+        detectionMethod: result.authMethod === 'api_key' ? 'api_key' : 'service_account'
       }));
 
       return {
         sheetId: spreadsheetId,
-        title: response.data.properties.title,
+        title: result.data.properties.title,
         tabs,
-        lastUpdated: new Date().toISOString()
+        isPublic: result.isPublic,
+        accessMethod: result.authMethod,
+        lastUpdated: new Date().toISOString(),
+        ...(result.isPublic && {
+          note: 'Enhanced public sheet access with full tab metadata',
+          notice: 'Accessed using Google Sheets API with proper authentication'
+        })
       };
     } catch (error) {
       this._handleGoogleApiError(error, 'getSheetTabs');
@@ -64,34 +67,27 @@ class GoogleSheetsService {
 
   async getTabContent(spreadsheetId, tabName) {
     try {
-      await this.ensureInitialized();
-      
+      // Get tab content using dual authentication strategy
       const range = `${tabName}`;
+      const result = await googleAuthClient.getSpreadsheetWithFallback(spreadsheetId, 'values', range);
       
-      const response = await this.sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range,
-        valueRenderOption: 'UNFORMATTED_VALUE',
-        dateTimeRenderOption: 'FORMATTED_STRING'
-      });
-
-      const data = response.data.values || [];
+      const data = result.data.values || [];
       const actualRowCount = data.length;
       const actualColumnCount = data.length > 0 ? Math.max(...data.map(row => row.length)) : 0;
 
-      const tabMetadataResponse = await this.sheets.spreadsheets.get({
-        spreadsheetId,
-        ranges: [tabName],
-        fields: 'sheets.properties'
-      });
-
-      const sheetProperties = tabMetadataResponse.data.sheets[0]?.properties;
+      // Get metadata for the specific tab
+      const metadataResult = await googleAuthClient.getSpreadsheetWithFallback(spreadsheetId, 'metadata');
+      const sheetProperties = metadataResult.data.sheets.find(sheet => 
+        sheet.properties.title === tabName
+      )?.properties;
       const gridProperties = sheetProperties?.gridProperties || {};
 
       return {
         tabName,
-        range: response.data.range,
+        range: result.data.range,
         data,
+        authMethod: result.authMethod,
+        isPublic: result.isPublic,
         metadata: {
           rowCount: gridProperties.rowCount || 0,
           columnCount: gridProperties.columnCount || 0,
@@ -110,20 +106,19 @@ class GoogleSheetsService {
 
   async validateSheetAccess(spreadsheetId) {
     try {
-      await this.ensureInitialized();
-      
-      await this.sheets.spreadsheets.get({
-        spreadsheetId,
-        fields: 'properties.title'
-      });
+      // Use dual authentication strategy for validation
+      const result = await googleAuthClient.getSpreadsheetWithFallback(spreadsheetId, 'metadata');
 
       return {
         hasAccess: true,
         sheetId: spreadsheetId,
+        title: result.data.properties.title,
+        authMethod: result.authMethod,
+        isPublic: result.isPublic,
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      if (error.code === 404) {
+      if (error.message.includes('not found') || error.message.includes('access denied')) {
         return {
           hasAccess: false,
           sheetId: spreadsheetId,

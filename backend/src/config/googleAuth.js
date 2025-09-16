@@ -1,9 +1,11 @@
 const { google } = require('googleapis');
+const axios = require('axios');
 
 class GoogleAuthClient {
   constructor() {
     this.auth = null;
     this.sheets = null;
+    this.apiKey = process.env.GOOGLE_API_KEY;
   }
 
   async initialize() {
@@ -89,7 +91,128 @@ class GoogleAuthClient {
     return this.sheets;
   }
 
+  /**
+   * Get spreadsheet metadata using API key (for public sheets)
+   */
+  async getPublicSpreadsheetMetadata(spreadsheetId) {
+    if (!this.apiKey) {
+      throw new Error('Google API Key not configured for public sheet access');
+    }
+
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`;
+      const response = await axios.get(url, {
+        params: {
+          key: this.apiKey,
+          fields: 'properties,sheets.properties'
+        },
+        timeout: 10000
+      });
+
+      console.log('✅ Retrieved public spreadsheet metadata via API key');
+      return response.data;
+    } catch (error) {
+      console.error('❌ Public API Error:', error.response?.data || error.message);
+      throw new Error(`Failed to access public spreadsheet: ${error.response?.data?.error?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Get spreadsheet values using API key (for public sheets)
+   */
+  async getPublicSpreadsheetValues(spreadsheetId, range) {
+    if (!this.apiKey) {
+      throw new Error('Google API Key not configured for public sheet access');
+    }
+
+    try {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
+      const response = await axios.get(url, {
+        params: {
+          key: this.apiKey
+        },
+        timeout: 30000
+      });
+
+      console.log('✅ Retrieved public spreadsheet values via API key');
+      return response.data;
+    } catch (error) {
+      console.error('❌ Public API Error:', error.response?.data || error.message);
+      throw new Error(`Failed to access public spreadsheet values: ${error.response?.data?.error?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Try to access spreadsheet with dual authentication strategy
+   */
+  async getSpreadsheetWithFallback(spreadsheetId, operation = 'metadata', range = null) {
+    try {
+      // First try service account authentication (for private/shared sheets)
+      if (operation === 'metadata') {
+        const sheets = await this.getSheetsClient();
+        const result = await sheets.spreadsheets.get({
+          spreadsheetId,
+          fields: 'properties,sheets.properties'
+        });
+        
+        console.log('✅ Used service account authentication');
+        return {
+          data: result.data,
+          authMethod: 'service_account',
+          isPublic: false
+        };
+      } else if (operation === 'values' && range) {
+        const sheets = await this.getSheetsClient();
+        const result = await sheets.spreadsheets.values.get({
+          spreadsheetId,
+          range
+        });
+        
+        console.log('✅ Used service account authentication');
+        return {
+          data: result.data,
+          authMethod: 'service_account',
+          isPublic: false
+        };
+      }
+    } catch (error) {
+      console.log(`⚠️  Service account failed: ${error.message}, trying API key...`);
+      
+      // If service account fails (403, 401), try API key for public sheets
+      if ((error.code === 403 || error.code === 401 || error.status === 403 || error.status === 401) && this.apiKey) {
+        try {
+          if (operation === 'metadata') {
+            const result = await this.getPublicSpreadsheetMetadata(spreadsheetId);
+            return {
+              data: result,
+              authMethod: 'api_key',
+              isPublic: true
+            };
+          } else if (operation === 'values' && range) {
+            const result = await this.getPublicSpreadsheetValues(spreadsheetId, range);
+            return {
+              data: result,
+              authMethod: 'api_key',
+              isPublic: true
+            };
+          }
+        } catch (apiError) {
+          console.error('❌ Both authentication methods failed');
+          throw new Error(`Unable to access spreadsheet: ${apiError.message}`);
+        }
+      }
+      
+      throw error;
+    }
+  }
+
   validateCredentials() {
+    const results = {
+      serviceAccount: false,
+      apiKey: false,
+      methods: []
+    };
+
     // Method 1: Base64-encoded service account JSON (Recommended)
     if (process.env.GOOGLE_SERVICE_ACCOUNT_BASE64) {
       try {
@@ -99,50 +222,58 @@ class GoogleAuthClient {
         const requiredFields = ['client_email', 'private_key', 'project_id'];
         const hasAllFields = requiredFields.every(field => credentials[field]);
         
-        if (!hasAllFields) {
+        if (hasAllFields) {
+          results.serviceAccount = true;
+          results.methods.push('Base64 Service Account');
+        } else {
           console.error('Base64 service account missing required fields:', requiredFields);
-          return false;
         }
-        
-        return true;
       } catch (error) {
         console.error('Invalid Base64 service account credentials:', error.message);
-        return false;
       }
     }
     
     // Method 2: Individual environment variables (Legacy)
-    const {
-      GOOGLE_SERVICE_ACCOUNT_EMAIL,
-      GOOGLE_PRIVATE_KEY,
-      GOOGLE_PROJECT_ID
-    } = process.env;
+    if (!results.serviceAccount) {
+      const {
+        GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        GOOGLE_PRIVATE_KEY,
+        GOOGLE_PROJECT_ID
+      } = process.env;
 
-    const hasCredentials = !!(GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY && GOOGLE_PROJECT_ID);
-    
-    if (hasCredentials && GOOGLE_PRIVATE_KEY) {
-      // Check if the private key has the correct format
-      let testKey = GOOGLE_PRIVATE_KEY;
+      const hasCredentials = !!(GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY && GOOGLE_PROJECT_ID);
       
-      // Try to decode if it looks base64 encoded
-      if (!testKey.includes('-----BEGIN PRIVATE KEY-----')) {
-        try {
-          testKey = Buffer.from(testKey, 'base64').toString('utf8');
-        } catch (e) {
-          console.warn('Private key appears to be neither properly formatted nor valid base64');
+      if (hasCredentials && GOOGLE_PRIVATE_KEY) {
+        // Check if the private key has the correct format
+        let testKey = GOOGLE_PRIVATE_KEY;
+        
+        // Try to decode if it looks base64 encoded
+        if (!testKey.includes('-----BEGIN PRIVATE KEY-----')) {
+          try {
+            testKey = Buffer.from(testKey, 'base64').toString('utf8');
+          } catch (e) {
+            console.warn('Private key appears to be neither properly formatted nor valid base64');
+          }
         }
-      }
-      
-      testKey = testKey.replace(/\\n/g, '\n');
-      
-      if (!testKey.includes('-----BEGIN PRIVATE KEY-----') || !testKey.includes('-----END PRIVATE KEY-----')) {
-        console.error('Private key validation failed: Missing BEGIN/END markers');
-        console.log('Expected format: -----BEGIN PRIVATE KEY-----\\n...key content...\\n-----END PRIVATE KEY-----');
-        return false;
+        
+        testKey = testKey.replace(/\\n/g, '\n');
+        
+        if (testKey.includes('-----BEGIN PRIVATE KEY-----') && testKey.includes('-----END PRIVATE KEY-----')) {
+          results.serviceAccount = true;
+          results.methods.push('Individual Environment Variables');
+        } else {
+          console.error('Private key validation failed: Missing BEGIN/END markers');
+        }
       }
     }
 
-    return hasCredentials;
+    // Method 3: API Key for public sheets
+    if (this.apiKey) {
+      results.apiKey = true;
+      results.methods.push('API Key');
+    }
+
+    return results;
   }
 }
 
