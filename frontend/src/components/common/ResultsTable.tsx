@@ -98,14 +98,14 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
       headerName: 'Row',
       width: 80,
       type: 'number',
-      valueGetter: (params) => params.row.y,
+      valueGetter: (value, row) => row.y,
     },
     {
       field: 'column',
       headerName: 'Column', 
       width: 80,
       type: 'number',
-      valueGetter: (params) => params.row.x,
+      valueGetter: (value, row) => row.x,
     },
     {
       field: 'elevation',

@@ -3,7 +3,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
   Box,
   Chip,
   Stack,
@@ -64,76 +63,68 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
           </Stack>
         </Box>
 
-        <Grid container spacing={3}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{ justifyContent: 'space-between' }}>
           {/* Primary Stats */}
-          <Grid xs={12} sm={6} md={3}>
-            <Box sx={{ textAlign: 'center', p: 2 }}>
-              <Typography variant="h4" color="primary" sx={{ fontWeight: 600 }}>
-                {stats.flowCells}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Qualifying Cells
-              </Typography>
-              <Chip 
-                label={`${coveragePercent}% coverage`} 
-                size="small" 
-                color={coveragePercent > 20 ? 'success' : coveragePercent > 10 ? 'warning' : 'default'}
-                variant="outlined"
-              />
-            </Box>
-          </Grid>
+          <Box sx={{ textAlign: 'center', p: 2, flex: 1 }}>
+            <Typography variant="h4" color="primary" sx={{ fontWeight: 600 }}>
+              {stats.flowCells}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Qualifying Cells
+            </Typography>
+            <Chip 
+              label={`${coveragePercent}% coverage`} 
+              size="small" 
+              color={coveragePercent > 20 ? 'success' : coveragePercent > 10 ? 'warning' : 'default'}
+              variant="outlined"
+            />
+          </Box>
 
-          <Grid xs={12} sm={6} md={3}>
-            <Box sx={{ textAlign: 'center', p: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                {formatNumber(stats.totalCells)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Total Cells
-              </Typography>
-              <Chip 
-                label={`${metadata.gridDimensions.rows}×${metadata.gridDimensions.cols}`}
-                size="small"
-                variant="outlined"
-                icon={<GridIcon />}
-              />
-            </Box>
-          </Grid>
+          <Box sx={{ textAlign: 'center', p: 2, flex: 1 }}>
+            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+              {formatNumber(stats.totalCells)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Total Cells
+            </Typography>
+            <Chip 
+              label={`${metadata.gridDimensions.rows}×${metadata.gridDimensions.cols}`}
+              size="small"
+              variant="outlined"
+              icon={<GridIcon />}
+            />
+          </Box>
 
-          <Grid xs={12} sm={6} md={3}>
-            <Box sx={{ textAlign: 'center', p: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                {formatTime(stats.processingTime)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Processing Time
-              </Typography>
-              <Chip 
-                label={`${formatNumber(efficiency.cellsPerMs)}/ms`}
-                size="small"
-                variant="outlined"
-                icon={<SpeedIcon />}
-              />
-            </Box>
-          </Grid>
+          <Box sx={{ textAlign: 'center', p: 2, flex: 1 }}>
+            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+              {formatTime(stats.processingTime)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Processing Time
+            </Typography>
+            <Chip 
+              label={`${formatNumber(efficiency.cellsPerMs)}/ms`}
+              size="small"
+              variant="outlined"
+              icon={<SpeedIcon />}
+            />
+          </Box>
 
-          <Grid xs={12} sm={6} md={3}>
-            <Box sx={{ textAlign: 'center', p: 2 }}>
-              <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                {metadata.algorithm.split('-')[0]}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Algorithm
-              </Typography>
-              <Chip 
-                label={efficiency.algorithmsComplexity}
-                size="small"
-                variant="outlined"
-                icon={<TimerIcon />}
-              />
-            </Box>
-          </Grid>
-        </Grid>
+          <Box sx={{ textAlign: 'center', p: 2, flex: 1 }}>
+            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+              {metadata.algorithm.split('-')[0]}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Algorithm
+            </Typography>
+            <Chip 
+              label={efficiency.algorithmsComplexity}
+              size="small"
+              variant="outlined"
+              icon={<TimerIcon />}
+            />
+          </Box>
+        </Stack>
 
         <Divider sx={{ my: 3 }} />
 
@@ -161,49 +152,43 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
             Ocean Reachability
           </Typography>
           
-          <Grid container spacing={2}>
-            <Grid xs={12} sm={4}>
-              <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                <Typography variant="h6" color="info.main">
-                  {oceanReach.pacific}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Pacific Only
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {Math.round(oceanReach.pacificOnlyPercent * 100)}%
-                </Typography>
-              </Box>
-            </Grid>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'action.hover', borderRadius: 1, flex: 1 }}>
+              <Typography variant="h6" color="info.main">
+                {oceanReach.pacific}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Pacific Only
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {Math.round(oceanReach.pacificOnlyPercent * 100)}%
+              </Typography>
+            </Box>
 
-            <Grid xs={12} sm={4}>
-              <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                <Typography variant="h6" color="warning.main">
-                  {oceanReach.atlantic}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Atlantic Only
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {Math.round(oceanReach.atlanticOnlyPercent * 100)}%
-                </Typography>
-              </Box>
-            </Grid>
+            <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'action.hover', borderRadius: 1, flex: 1 }}>
+              <Typography variant="h6" color="warning.main">
+                {oceanReach.atlantic}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Atlantic Only
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {Math.round(oceanReach.atlanticOnlyPercent * 100)}%
+              </Typography>
+            </Box>
 
-            <Grid xs={12} sm={4}>
-              <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'success.main', color: 'success.contrastText', borderRadius: 1 }}>
-                <Typography variant="h6">
-                  {oceanReach.intersection}
-                </Typography>
-                <Typography variant="body2">
-                  Both Oceans
-                </Typography>
-                <Typography variant="caption">
-                  {Math.round(oceanReach.bothOceansPercent * 100)}%
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
+            <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: 'success.main', color: 'success.contrastText', borderRadius: 1, flex: 1 }}>
+              <Typography variant="h6">
+                {oceanReach.intersection}
+              </Typography>
+              <Typography variant="body2">
+                Both Oceans
+              </Typography>
+              <Typography variant="caption">
+                {Math.round(oceanReach.bothOceansPercent * 100)}%
+              </Typography>
+            </Box>
+          </Stack>
         </Box>
 
         {/* Algorithm Configuration */}

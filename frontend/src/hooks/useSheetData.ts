@@ -66,34 +66,55 @@ export const useSheetData = () => {
     }));
 
     try {
-      const response = USE_MOCK_DATA 
-        ? await service.parseUrl(url)
-        : await service.validateSheet(url);
+      if (USE_MOCK_DATA) {
+        const response = await service.parseUrl(url);
+        
+        if (isApiError(response)) {
+          setState(prev => ({
+            ...prev,
+            urlValidation: {
+              isValid: false,
+              isValidating: false,
+              error: response.error.message,
+            },
+          }));
+          return;
+        }
 
-      if (isApiError(response)) {
+        const isValid = response.data?.isValid || false;
         setState(prev => ({
           ...prev,
           urlValidation: {
-            isValid: false,
+            isValid,
             isValidating: false,
-            error: response.error.message,
+            error: isValid ? null : 'Invalid URL',
           },
         }));
-        return;
+      } else {
+        const response = await service.validateSheet(url);
+        
+        if (isApiError(response)) {
+          setState(prev => ({
+            ...prev,
+            urlValidation: {
+              isValid: false,
+              isValidating: false,
+              error: response.error.message,
+            },
+          }));
+          return;
+        }
+
+        const isValid = response.data?.isValid || false;
+        setState(prev => ({
+          ...prev,
+          urlValidation: {
+            isValid,
+            isValidating: false,
+            error: isValid ? null : response.data?.message || 'Invalid URL',
+          },
+        }));
       }
-
-      const isValid = USE_MOCK_DATA 
-        ? response.data?.isValid || false
-        : response.data?.isValid || false;
-
-      setState(prev => ({
-        ...prev,
-        urlValidation: {
-          isValid,
-          isValidating: false,
-          error: isValid ? null : (response.data as any)?.message || 'Invalid URL',
-        },
-      }));
 
     } catch (error) {
       setState(prev => ({
