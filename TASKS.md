@@ -249,14 +249,212 @@ Add required environment variables:
 
 ---
 
+### Phase 3 📋 (Planned)
+**Pacific-Atlantic Water Flow Algorithm**
+
+**Objective:** Implement a system to determine grid cells where water can flow to both the island's northwest (Pacific) and southeast (Atlantic) edges using optimized BFS/DFS to handle large grids efficiently.
+
+#### Core Algorithm: Reverse BFS Optimization
+Instead of checking each cell individually (O(n⁴)), use reverse traversal from ocean borders for O(m×n) complexity.
+
+#### Step 1: Algorithm Core Service
+Create `src/services/waterFlowService.js`:
+- [ ] Implement main algorithm entry point `analyzeWaterFlow(grid)`
+- [ ] Create `bfsFromPacific(grid)` - BFS from top and left edges (northwest)
+- [ ] Create `bfsFromAtlantic(grid)` - BFS from bottom and right edges (southeast)
+- [ ] Implement `findIntersection(pacificCells, atlanticCells)` - Get cells reaching both oceans
+- [ ] Add `validateGrid(grid)` - Input validation and preprocessing
+- [ ] Optimize data structures using Set for O(1) lookup operations
+- [ ] Implement direction arrays for efficient neighbor checking
+
+#### Step 2: Grid Processing Integration  
+Extend Google Sheets integration for topographical data:
+- [ ] Parse numeric grid data from Google Sheets
+- [ ] Handle different data formats (integers, decimals, mixed values)
+- [ ] Add data validation and preprocessing utilities
+- [ ] Implement grid normalization and error handling
+- [ ] Create streaming parser for large sheets without loading entire grid
+- [ ] Add data type conversion and validation middleware
+
+#### Step 3: API Endpoints with Swagger
+Create `src/routes/waterFlow.js` with endpoints:
+- [ ] `POST /api/water-flow/analyze` - Direct grid analysis
+- [ ] `POST /api/water-flow/from-sheet` - Analyze from Google Sheets data
+- [ ] `GET /api/water-flow/sheet/:sheetId/tab/:tabName` - Sheet-based analysis
+- [ ] `POST /api/water-flow/batch` - Multiple grid analysis
+- [ ] `GET /api/water-flow/stats/:analysisId` - Get analysis statistics
+- [ ] Add comprehensive Swagger JSDoc annotations for all endpoints
+- [ ] Define request/response schemas in `src/utils/swagger.js`
+
+#### Step 4: Performance Optimizations
+**Memory Management:**
+- [ ] Implement streaming for large grids (>1000x1000)
+- [ ] Add chunked processing for memory efficiency
+- [ ] Create result caching system with TTL for repeated analyses
+- [ ] Implement progressive analysis with status updates
+- [ ] Add explicit garbage collection for large data structures
+
+**Algorithm Optimizations:**
+- [ ] Implement early termination conditions
+- [ ] Add bidirectional BFS for faster convergence
+- [ ] Create parallel processing for independent grid sections
+- [ ] Optimize data structures (Set vs Array performance)
+- [ ] Implement dual queue system for Pacific and Atlantic traversals
+
+#### Step 5: Controllers & Business Logic
+Create `src/controllers/waterFlowController.js`:
+- [ ] Implement input validation for grid dimensions and data types
+- [ ] Add integration with Google Sheets service
+- [ ] Create response formatting and pagination logic
+- [ ] Implement comprehensive error handling for edge cases
+- [ ] Add performance monitoring and logging
+- [ ] Handle async processing for long-running analyses
+
+#### Step 6: Advanced Features
+**Analysis Features:**
+- [ ] **Flow Path Visualization**: Return actual flow paths, not just endpoints
+- [ ] **Statistical Analysis**: Count cells, percentage coverage, flow intensity
+- [ ] **Multi-Ocean Support**: Extend beyond Pacific-Atlantic to custom edges
+- [ ] **Grid Comparison**: Compare multiple topographical scenarios
+- [ ] **Algorithm Variants**: Support both BFS and DFS implementations
+
+**Optimization Features:**
+- [ ] **Result Caching**: Cache analysis results with configurable TTL
+- [ ] **Batch Processing**: Handle multiple grids in single request
+- [ ] **Progressive Results**: Stream results for large grids
+- [ ] **Analysis History**: Store and retrieve previous analyses
+- [ ] **Job Queue**: Async processing with job tracking
+
+#### Step 7: Data Models & Schemas
+**Request Schemas:**
+- [ ] Create `GridAnalysisRequest` schema with grid data and options
+- [ ] Define `WaterFlowOptions` with configurable ocean edges
+- [ ] Add support for analysis preferences (stats, paths, etc.)
+
+**Response Schemas:**
+- [ ] Implement `WaterFlowResult` with cells, stats, and metadata
+- [ ] Create `FlowStatistics` with coverage and performance metrics
+- [ ] Define `GridMetadata` with dimensions and processing info
+
+#### Step 8: Testing Strategy
+**Unit Tests:**
+- [ ] Test algorithm correctness with known grid patterns
+- [ ] Test edge cases (single row/col, uniform height, extreme values)
+- [ ] Create performance benchmarks for various grid sizes
+- [ ] Validate memory usage with large grids
+- [ ] Test BFS vs DFS performance comparison
+
+**Integration Tests:**
+- [ ] Test Google Sheets to water flow pipeline
+- [ ] Validate API endpoint functionality
+- [ ] Test error handling scenarios
+- [ ] Performance test with large grid datasets
+- [ ] Test concurrent analysis requests
+
+#### Step 9: Monitoring & Analytics
+**Performance Monitoring:**
+- [ ] Implement processing time tracking by grid size
+- [ ] Add memory usage monitoring and alerts
+- [ ] Track cache hit rates and effectiveness
+- [ ] Create API usage analytics and reporting
+
+**Algorithm Metrics:**
+- [ ] Implement grid complexity analysis
+- [ ] Add flow pattern classification
+- [ ] Create performance regression detection
+- [ ] Track success/error rates and common failure patterns
+
+#### Step 10: Documentation & Examples
+- [ ] Create comprehensive API documentation with examples
+- [ ] Add algorithm explanation and visualization
+- [ ] Document performance characteristics and limitations
+- [ ] Provide sample grid datasets for testing
+- [ ] Create troubleshooting guide for common issues
+
+## Technical Implementation Specifications
+
+### Algorithm Details:
+```
+Time Complexity: O(m × n) where m, n are grid dimensions
+Space Complexity: O(m × n) for visited sets and result storage
+Optimization: Reverse BFS from ocean borders instead of cell-by-cell analysis
+```
+
+### API Design Examples:
+
+#### POST /api/water-flow/analyze
+```json
+// Request
+{
+  "grid": [
+    [1, 2, 2, 3, 5],
+    [3, 2, 3, 4, 4], 
+    [2, 4, 5, 3, 1],
+    [6, 7, 1, 4, 5],
+    [5, 1, 1, 2, 4]
+  ],
+  "options": {
+    "pacificEdges": ["top", "left"],
+    "atlanticEdges": ["bottom", "right"],
+    "includeStats": true,
+    "includePaths": false
+  }
+}
+
+// Response
+{
+  "cells": [
+    {"x": 0, "y": 4}, {"x": 1, "y": 3}, {"x": 1, "y": 4},
+    {"x": 2, "y": 2}, {"x": 3, "y": 0}, {"x": 3, "y": 1}, {"x": 4, "y": 0}
+  ],
+  "stats": {
+    "totalCells": 25,
+    "flowCells": 7,
+    "coverage": 0.28,
+    "processingTime": 15
+  },
+  "metadata": {
+    "gridDimensions": {"rows": 5, "cols": 5},
+    "algorithm": "optimized-bfs",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "pacificReachable": 12,
+    "atlanticReachable": 14,
+    "intersection": 7
+  }
+}
+```
+
+#### GET /api/water-flow/sheet/:sheetId/tab/:tabName
+```json
+// Response
+{
+  "sheetInfo": {
+    "sheetId": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+    "tabName": "Topography",
+    "gridDimensions": {"rows": 100, "cols": 100}
+  },
+  "analysis": {
+    "cells": [...], // Flow cells coordinates
+    "stats": {...}, // Analysis statistics
+    "processingInfo": {
+      "dataExtractionTime": 1200,
+      "algorithmTime": 450,
+      "totalTime": 1650
+    }
+  }
+}
+```
+
+---
+
 ### Future Phases 🔮 (To Be Planned)
 
 **Potential upcoming phases:**
-- **Phase 3:** Data processing and validation  
 - **Phase 4:** Database integration and caching
 - **Phase 5:** Real-time updates and webhooks
 - **Phase 6:** User authentication and authorization
 - **Phase 7:** Advanced data transformation features
+- **Phase 8:** Machine learning for flow pattern prediction
 
 ---
 
