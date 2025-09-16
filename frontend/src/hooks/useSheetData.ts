@@ -138,7 +138,7 @@ export const useSheetData = () => {
     }));
 
     try {
-      const response = await service.getSheetFromUrl(url);
+      const response = await service.getTabsFromUrl(url);
 
       if (isApiError(response)) {
         setState(prev => ({

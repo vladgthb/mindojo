@@ -18,6 +18,25 @@ const validateGoogleCredentials = (req, res, next) => {
   next();
 };
 
+// Conditional validation that allows public URLs to bypass authentication requirements
+const conditionalGoogleCredentials = (req, res, next) => {
+  // For URL-based requests, check if it's a public URL
+  if (req.body && req.body.url) {
+    const url = req.body.url;
+    const isPublicUrl = url.includes('usp=sharing') || url.includes('/edit?') || url.includes('userstoinvite');
+    
+    if (isPublicUrl) {
+      // Public URLs can proceed without credentials validation
+      // The controller will try authenticated access first, then fallback to public access
+      console.log('Public URL detected, allowing without credential validation:', url.substring(0, 100));
+      return next();
+    }
+  }
+  
+  // For non-public URLs or non-URL requests, require credentials
+  return validateGoogleCredentials(req, res, next);
+};
+
 const validateSheetId = (req, res, next) => {
   const { sheetId } = req.params;
   
@@ -118,6 +137,7 @@ const rateLimitMiddleware = () => {
 
 module.exports = {
   validateGoogleCredentials,
+  conditionalGoogleCredentials,
   validateSheetId,
   validateTabName,
   rateLimitMiddleware

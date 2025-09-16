@@ -2,6 +2,7 @@ const express = require('express');
 const sheetsController = require('../controllers/sheetsController');
 const { 
   validateGoogleCredentials, 
+  conditionalGoogleCredentials,
   validateSheetId, 
   validateTabName,
   rateLimitMiddleware
@@ -396,7 +397,7 @@ router.post('/validate', sheetsController.validateSheetAccess);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/parse-url', sheetsController.parseSheetUrl);
+router.post('/parse-url', conditionalGoogleCredentials, sheetsController.parseSheetUrl);
 
 /**
  * @swagger
@@ -440,7 +441,7 @@ router.post('/parse-url', sheetsController.parseSheetUrl);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/by-url', sheetsController.getSheetByUrl);
+router.post('/by-url', conditionalGoogleCredentials, sheetsController.getSheetByUrl);
 
 /**
  * @swagger
@@ -484,7 +485,7 @@ router.post('/by-url', sheetsController.getSheetByUrl);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/tabs-from-url', sheetsController.getSheetByUrl);
+router.post('/tabs-from-url', conditionalGoogleCredentials, sheetsController.getSheetByUrl);
 
 /**
  * @swagger
@@ -535,6 +536,6 @@ router.post('/tabs-from-url', sheetsController.getSheetByUrl);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/content-by-url', sheetsController.getTabContentByUrl);
+router.post('/content-by-url', conditionalGoogleCredentials, sheetsController.getTabContentByUrl);
 
 module.exports = router;

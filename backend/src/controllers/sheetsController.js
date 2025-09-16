@@ -1,4 +1,5 @@
 const googleSheetsService = require('../services/googleSheetsService');
+const publicSheetsService = require('../services/publicSheetsService');
 const SheetUrlParser = require('../utils/sheetUrlParser');
 
 class SheetsController {
@@ -167,13 +168,43 @@ class SheetsController {
         });
       }
 
-      // Try to get sheet tabs using the extracted ID
-      const tabs = await googleSheetsService.getSheetTabs(sheetId);
+      let tabs;
+      let accessMethod = 'authenticated';
+      let fallbackUsed = false;
+
+      try {
+        // Try authenticated access first
+        tabs = await googleSheetsService.getSheetTabs(sheetId);
+      } catch (authError) {
+        // If authenticated access fails and this appears to be a public URL, try public access
+        const urlInfo = SheetUrlParser.parseSheetUrl(url);
+        
+        if (urlInfo.isPublicLink || publicSheetsService.constructor.isPublicSharingUrl(url)) {
+          console.log(`Authenticated access failed for ${sheetId}, trying public access...`);
+          
+          try {
+            tabs = await publicSheetsService.getPublicSheetTabs(sheetId);
+            accessMethod = 'public_fallback';
+            fallbackUsed = true;
+          } catch (publicError) {
+            // If both methods fail, throw the original authenticated error
+            console.error(`Both authenticated and public access failed for ${sheetId}`);
+            throw authError;
+          }
+        } else {
+          // If it's not a public URL, just throw the auth error
+          throw authError;
+        }
+      }
       
       // Add URL parsing information to the response
       const urlInfo = SheetUrlParser.parseSheetUrl(url);
       tabs.urlInfo = urlInfo;
-      tabs.accessMethod = 'extracted_from_url';
+      tabs.accessMethod = accessMethod;
+      
+      if (fallbackUsed) {
+        tabs.notice = 'Accessed using public fallback method. Some features may be limited.';
+      }
 
       res.json(tabs);
     } catch (error) {
@@ -208,24 +239,56 @@ class SheetsController {
 
       // Use provided tabName or try to extract from URL
       let finalTabName = tabName;
+      let gid = '0'; // Default GID for public access
+      
       if (!finalTabName) {
-        const extractedTabName = SheetUrlParser.extractTabName(url);
-        if (extractedTabName) {
-          // If gid is extracted, we need to get the actual tab name
-          // For now, we'll use the first tab if no tab name is provided
-          finalTabName = 'Sheet1'; // Default tab name
+        const extractedGid = SheetUrlParser.extractTabName(url);
+        if (extractedGid) {
+          gid = extractedGid;
+          finalTabName = `Sheet_${extractedGid}`;
         } else {
-          finalTabName = 'Sheet1'; // Default tab name
+          finalTabName = 'Sheet1'; // Default tab name for authenticated access
         }
       }
 
-      const content = await googleSheetsService.getTabContent(sheetId, finalTabName);
+      let content;
+      let accessMethod = 'authenticated';
+      let fallbackUsed = false;
+
+      try {
+        // Try authenticated access first
+        content = await googleSheetsService.getTabContent(sheetId, finalTabName);
+      } catch (authError) {
+        // If authenticated access fails and this appears to be a public URL, try public access
+        const urlInfo = SheetUrlParser.parseSheetUrl(url);
+        
+        if (urlInfo.isPublicLink || publicSheetsService.constructor.isPublicSharingUrl(url)) {
+          console.log(`Authenticated access failed for ${sheetId}, trying public access...`);
+          
+          try {
+            content = await publicSheetsService.getPublicTabContent(sheetId, gid);
+            accessMethod = 'public_fallback';
+            fallbackUsed = true;
+          } catch (publicError) {
+            // If both methods fail, throw the original authenticated error
+            console.error(`Both authenticated and public access failed for ${sheetId}`);
+            throw authError;
+          }
+        } else {
+          // If it's not a public URL, just throw the auth error
+          throw authError;
+        }
+      }
       
       // Add URL parsing information to the response
       const urlInfo = SheetUrlParser.parseSheetUrl(url);
       content.urlInfo = urlInfo;
-      content.accessMethod = 'extracted_from_url';
+      content.accessMethod = accessMethod;
       content.requestedTabName = finalTabName;
+      
+      if (fallbackUsed) {
+        content.notice = 'Accessed using public fallback method. Some features may be limited.';
+      }
 
       res.json(content);
     } catch (error) {
