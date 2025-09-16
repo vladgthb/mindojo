@@ -63,6 +63,7 @@ export interface WaterFlowResult {
   cells: FlowCell[];
   stats: WaterFlowStatistics;
   metadata: WaterFlowMetadata;
+  grid?: number[][];  // The processed elevation grid for visualization
   input?: {
     url: string;
     sheetId: string;

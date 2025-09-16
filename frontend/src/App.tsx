@@ -332,9 +332,11 @@ function App() {
                 <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
                   <Box sx={{ flex: 1 }}>
                     <GridVisualization
-                      grid={analysisResults.input ? 
-                        mockService.getGridData(analysisResults.input.tabName) || [[1]] :
-                        [[1]]
+                      grid={analysisResults.grid || 
+                        (analysisResults.input ? 
+                          mockService.getGridData(analysisResults.input.tabName) || [[1]] :
+                          [[1]]
+                        )
                       }
                       qualifyingCells={analysisResults.cells}
                       title="Water Flow Visualization"

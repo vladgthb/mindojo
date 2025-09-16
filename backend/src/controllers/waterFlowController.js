@@ -232,6 +232,7 @@ class WaterFlowController {
         // Build comprehensive response
         const response = {
           ...result,
+          grid, // Include the processed grid for visualization
           input: {
             url,
             sheetId,
@@ -453,6 +454,9 @@ class WaterFlowController {
         processedCols: grid[0]?.length || 0
       }
     };
+
+    // Include the processed grid for visualization
+    result.grid = grid;
 
     result.processingInfo = {
       requestId,
