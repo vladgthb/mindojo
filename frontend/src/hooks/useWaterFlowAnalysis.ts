@@ -6,9 +6,8 @@ import { mockService } from '../services/mockService';
 import type { WaterFlowResult, WaterFlowOptions } from '../types';
 import { isApiError } from '../services/api';
 
-// Toggle for using mock data during development
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true' || 
-                     import.meta.env.NODE_ENV === 'development';
+// Phase 5: Toggle for using mock data during development
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
 interface UseWaterFlowAnalysisState {
   isAnalyzing: boolean;
