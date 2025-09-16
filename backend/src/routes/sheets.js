@@ -444,6 +444,50 @@ router.post('/by-url', sheetsController.getSheetByUrl);
 
 /**
  * @swagger
+ * /api/sheets/tabs-from-url:
+ *   post:
+ *     summary: Get tabs list from a public Google Sheets URL (alias for by-url)
+ *     tags: [Google Sheets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - url
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: Public Google Sheets URL
+ *                 example: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing"
+ *     responses:
+ *       200:
+ *         description: Tabs list retrieved successfully from shared URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SheetTabs'
+ *                 - type: object
+ *                   properties:
+ *                     urlInfo:
+ *                       type: object
+ *                       description: Parsed URL information including access type
+ *                     accessMethod:
+ *                       type: string
+ *                       description: How the sheet was accessed
+ *       400:
+ *         description: Invalid or missing URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/tabs-from-url', sheetsController.getSheetByUrl);
+
+/**
+ * @swagger
  * /api/sheets/content-by-url:
  *   post:
  *     summary: Get tab content by providing a Google Sheets URL
