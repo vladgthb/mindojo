@@ -743,12 +743,357 @@ const mockAnalysisResult = {
 
 ---
 
+### Phase 5 📋 (Planned)
+**Frontend-Backend Integration: Replace Mock Data with Real API Calls**
+
+**Objective:** Integrate the React frontend (Phase 4) with the Node.js backend APIs (Phases 2 & 3), replacing all mock data with real API calls for a complete end-to-end Island Water Flow Analysis application.
+
+#### Integration Analysis
+**Backend APIs Available (Completed):**
+- **Google Sheets API** (Phase 2 ✅): URL parsing, tab fetching, content reading
+- **Water Flow API** (Phase 3 ✅): Direct analysis, sheet-based analysis, batch processing
+- **Infrastructure**: CORS configured, Swagger docs, error handling, authentication
+
+**Frontend Integration Points (Phase 4 ✅):**
+- **Mock Services**: Currently using `mockService.ts` with realistic test data
+- **State Management**: URL-based state with hooks (`useAppState`, `useSheetData`, `useWaterFlowAnalysis`)
+- **UI Components**: Ready for real data integration with proper loading/error states
+
+#### Step 1: API Client Infrastructure
+**Backend Connection Setup:**
+- [ ] Create `src/services/apiClient.ts` with HTTP client configuration (axios/fetch)
+- [ ] Configure base URLs for development and production environments
+- [ ] Add request/response interceptors for error handling and logging
+- [ ] Implement authentication headers if needed for future phases
+- [ ] Add request timeout configuration and retry logic
+- [ ] Set up TypeScript types for API responses matching backend schemas
+
+**Environment Configuration:**
+- [ ] Add `.env` files for API endpoint configuration
+- [ ] Configure Vite proxy for local development to avoid CORS issues
+- [ ] Set up environment variables: `VITE_API_BASE_URL`, `VITE_API_TIMEOUT`
+- [ ] Add different configurations for dev/staging/production
+- [ ] Configure build-time environment validation
+
+#### Step 2: Replace Google Sheets Mock Service
+**Update `src/services/sheetsService.ts`:**
+- [ ] Replace mock URL parsing with `POST /api/sheets/parse-url`
+- [ ] Replace mock tab fetching with `POST /api/sheets/tabs-from-url`
+- [ ] Replace mock sheet validation with `POST /api/sheets/validate`
+- [ ] Add proper error handling for backend API responses
+- [ ] Implement response data transformation to match frontend types
+- [ ] Add request caching for repeated URL validations
+
+**API Integration Mapping:**
+```typescript
+// Frontend Mock → Backend API
+parseSheetUrl(url) → POST /api/sheets/parse-url
+getSheetTabs(url) → POST /api/sheets/tabs-from-url  
+validateSheet(url) → POST /api/sheets/validate
+```
+
+**Response Data Transformation:**
+- [ ] Map backend response formats to frontend TypeScript interfaces
+- [ ] Handle different error response structures from backend
+- [ ] Transform tab metadata format for dropdown component compatibility
+- [ ] Validate response data and handle malformed responses
+
+#### Step 3: Replace Water Flow Analysis Mock Service
+**Update `src/services/waterFlowService.ts`:**
+- [ ] Replace mock analysis with `POST /api/water-flow/analyze-sheet-url`
+- [ ] Replace mock batch processing with `POST /api/water-flow/batch`
+- [ ] Add support for analysis statistics via `GET /api/water-flow/stats/{id}`
+- [ ] Implement large grid streaming for memory-efficient processing
+- [ ] Add progress tracking for long-running analyses
+- [ ] Handle analysis result caching and retrieval
+
+**API Integration Mapping:**
+```typescript
+// Frontend Mock → Backend API
+analyzeWaterFlow(url, tab) → POST /api/water-flow/analyze-sheet-url
+batchAnalysis(requests) → POST /api/water-flow/batch
+getAnalysisStats(id) → GET /api/water-flow/stats/{id}
+```
+
+**Real-time Analysis Integration:**
+- [ ] Implement WebSocket connection for progress updates (if available)
+- [ ] Add polling mechanism for analysis status updates
+- [ ] Handle large grid analysis with progress indicators
+- [ ] Implement analysis cancellation functionality
+
+#### Step 4: Error Handling & User Experience Enhancement
+**Comprehensive Error Management:**
+- [ ] Create error mapping from backend error codes to user-friendly messages
+- [ ] Implement retry logic for transient network failures
+- [ ] Add offline state detection and appropriate user feedback
+- [ ] Handle rate limiting responses from backend APIs
+- [ ] Create error recovery flows (retry, fallback, manual refresh)
+
+**Enhanced Loading States:**
+- [ ] Replace mock loading delays with real API response times
+- [ ] Add connection status indicators for API availability
+- [ ] Implement progressive loading for multi-step operations
+- [ ] Add loading time estimates based on grid size/complexity
+- [ ] Create detailed loading messages for different API operations
+
+**User Feedback Improvements:**
+- [ ] Add toast notifications for successful API operations
+- [ ] Implement detailed error messages with actionable suggestions  
+- [ ] Show API response times and performance metrics
+- [ ] Add "retry" buttons for failed operations
+- [ ] Display backend status information when available
+
+#### Step 5: Data Flow Integration
+**Complete User Journey Integration:**
+1. **URL Input Phase:**
+   - [ ] Replace mock URL validation with `POST /api/sheets/parse-url`
+   - [ ] Handle backend validation errors (invalid URLs, access denied, etc.)
+   - [ ] Show detailed URL parsing results (sheet ID, permissions, etc.)
+
+2. **Tab Loading Phase:**
+   - [ ] Replace mock tab fetching with `POST /api/sheets/tabs-from-url`
+   - [ ] Handle empty sheets, permission errors, and API failures
+   - [ ] Display real tab metadata (row counts, column counts, data types)
+
+3. **Analysis Phase:**
+   - [ ] Replace mock analysis with `POST /api/water-flow/analyze-sheet-url`
+   - [ ] Handle large grid processing with real-time progress updates
+   - [ ] Show actual processing times and algorithm performance metrics
+
+4. **Results Phase:**
+   - [ ] Process real analysis results with actual coordinate data
+   - [ ] Handle large result sets with pagination and streaming
+   - [ ] Display real grid visualization with actual elevation data
+
+#### Step 6: Performance Optimization
+**Request Optimization:**
+- [ ] Implement intelligent caching for repeated API calls
+- [ ] Add request debouncing for URL input validation
+- [ ] Optimize payload sizes for large grid data transfer
+- [ ] Implement request batching where possible
+- [ ] Add compression for large result sets
+
+**Memory Management:**
+- [ ] Handle large grid datasets efficiently in the browser
+- [ ] Implement virtual scrolling for large result tables
+- [ ] Add memory usage monitoring and cleanup
+- [ ] Optimize grid visualization for large datasets
+- [ ] Implement data streaming for very large analyses
+
+**Network Resilience:**
+- [ ] Add connection quality detection
+- [ ] Implement adaptive timeout based on network conditions
+- [ ] Add request queue management for poor connections
+- [ ] Implement background sync for interrupted operations
+- [ ] Add offline capability with cached results
+
+#### Step 7: Development Workflow Updates
+**Development Environment:**
+- [ ] Update development scripts to start both frontend and backend
+- [ ] Configure concurrent development server startup
+- [ ] Add health check integration between frontend and backend
+- [ ] Update documentation with new API integration requirements
+- [ ] Create development database seeding if needed
+
+**Testing Integration:**
+- [ ] Update unit tests to use real API responses
+- [ ] Add integration tests for full user workflows
+- [ ] Create API mocking for testing environments
+- [ ] Add end-to-end tests with real backend integration
+- [ ] Test error scenarios and edge cases with real APIs
+
+**Debugging & Monitoring:**
+- [ ] Add API request/response logging in development
+- [ ] Implement performance monitoring for API calls
+- [ ] Add error tracking and reporting
+- [ ] Create debug panel for API state inspection
+- [ ] Add network traffic analysis tools
+
+#### Step 8: Production Readiness
+**Deployment Configuration:**
+- [ ] Configure production API endpoints
+- [ ] Add environment-specific CORS settings
+- [ ] Implement health checks between frontend and backend
+- [ ] Add monitoring and alerting for API failures
+- [ ] Configure CDN and caching for static assets
+
+**Security Considerations:**
+- [ ] Validate all API inputs on both frontend and backend
+- [ ] Implement proper error message sanitization
+- [ ] Add rate limiting awareness in frontend
+- [ ] Secure API endpoints with proper authentication
+- [ ] Add CSRF protection if needed
+
+**Performance Monitoring:**
+- [ ] Track API response times and failures
+- [ ] Monitor large grid processing performance
+- [ ] Add user experience metrics
+- [ ] Track error rates and recovery success
+- [ ] Monitor memory usage with real data
+
+#### Step 9: User Experience Validation
+**Real Data Testing:**
+- [ ] Test with actual Google Sheets of various sizes
+- [ ] Validate behavior with different permission settings
+- [ ] Test edge cases: empty sheets, invalid data, large grids
+- [ ] Verify mobile performance with real API latency
+- [ ] Test concurrent user scenarios
+
+**Feature Validation:**
+- [ ] Verify grid visualization with real topographical data  
+- [ ] Test analysis accuracy with known result sets
+- [ ] Validate export functionality with real result data
+- [ ] Test sharing URLs with real analysis results
+- [ ] Verify accessibility with screen readers
+
+#### Step 10: Documentation & Launch Preparation
+**Documentation Updates:**
+- [ ] Update README with full setup instructions including backend
+- [ ] Document API integration patterns for future development
+- [ ] Create troubleshooting guide for common integration issues
+- [ ] Document performance characteristics with real data
+- [ ] Add API usage examples and best practices
+
+**Launch Checklist:**
+- [ ] Complete integration testing in staging environment
+- [ ] Performance testing with production-like data volumes
+- [ ] Security review of API integration
+- [ ] Backup and recovery testing
+- [ ] User acceptance testing with real workflows
+
+## Technical Implementation Details
+
+### API Integration Architecture:
+```typescript
+// Service Layer Structure
+src/services/
+├── apiClient.ts          # HTTP client configuration
+├── sheetsService.ts      # Google Sheets API integration  
+├── waterFlowService.ts   # Water Flow analysis API
+├── errorHandling.ts      # Centralized error management
+└── caching.ts            # Request caching and optimization
+
+// API Call Flow
+Frontend Component
+    ↓ (user action)
+Custom Hook (useSheetData)
+    ↓ (state management)
+Service Layer (sheetsService)
+    ↓ (HTTP request)
+API Client (axios/fetch)
+    ↓ (network)
+Backend API (Node.js/Express)
+    ↓ (response)
+Frontend State Update
+    ↓ (render)
+UI Components
+```
+
+### Real API Integration Examples:
+
+#### URL Validation Integration:
+```typescript
+// Before (Mock)
+const validateUrl = async (url: string) => {
+  await mockDelay(1000);
+  return mockUrlValidation;
+};
+
+// After (Real API)
+const validateUrl = async (url: string) => {
+  try {
+    const response = await apiClient.post('/api/sheets/parse-url', { url });
+    return {
+      isValid: response.data.isValid,
+      sheetId: response.data.sheetId,
+      originalUrl: response.data.originalUrl
+    };
+  } catch (error) {
+    throw new ApiError('Failed to validate URL', error);
+  }
+};
+```
+
+#### Water Flow Analysis Integration:
+```typescript
+// Before (Mock)
+const analyzeWaterFlow = async (url: string, tabName: string) => {
+  await mockDelay(3000);
+  return mockAnalysisResult;
+};
+
+// After (Real API)
+const analyzeWaterFlow = async (url: string, tabName: string) => {
+  try {
+    const response = await apiClient.post('/api/water-flow/analyze-sheet-url', {
+      url,
+      tabName,
+      options: {
+        includeStats: true,
+        includePaths: false
+      }
+    });
+    return {
+      cells: response.data.cells,
+      stats: response.data.stats,
+      grid: response.data.grid,
+      metadata: response.data.metadata
+    };
+  } catch (error) {
+    throw new ApiError('Analysis failed', error);
+  }
+};
+```
+
+### Error Handling Strategy:
+```typescript
+interface ApiError {
+  code: string;
+  message: string;
+  details?: any;
+  retryable: boolean;
+}
+
+// Error mapping from backend to user-friendly messages
+const errorMessages = {
+  'SHEET_ACCESS_ERROR': 'Unable to access the Google Sheet. Please check sharing permissions.',
+  'INVALID_URL': 'Please enter a valid Google Sheets URL.',
+  'ANALYSIS_TIMEOUT': 'Analysis is taking longer than expected. Please try again.',
+  'NETWORK_ERROR': 'Connection failed. Please check your internet connection.'
+};
+```
+
+## Integration Success Criteria
+
+### Functional Requirements:
+- ✅ **Complete Mock Replacement**: All mock services replaced with real API calls
+- ✅ **Error Handling**: Comprehensive error management with user feedback
+- ✅ **Performance**: Response times comparable to or better than mock delays
+- ✅ **Data Accuracy**: Real analysis results match expected algorithmic output
+- ✅ **User Experience**: Seamless transition from mock to real data
+
+### Technical Requirements:
+- ✅ **Type Safety**: All API responses properly typed and validated
+- ✅ **Caching**: Intelligent request caching for improved performance
+- ✅ **Error Recovery**: Retry logic and graceful degradation
+- ✅ **Monitoring**: API health monitoring and performance tracking
+- ✅ **Documentation**: Complete setup and troubleshooting guides
+
+### Performance Targets:
+- **URL Validation**: < 2 seconds response time
+- **Tab Loading**: < 3 seconds for typical sheets
+- **Analysis**: < 30 seconds for grids up to 100x100
+- **Error Recovery**: < 1 second retry attempts
+- **Memory Usage**: < 100MB for large result sets
+
+---
+
 ### Future Phases 🔮 (To Be Planned)
 
 **Potential upcoming phases:**
-- **Phase 5:** Backend-Frontend Integration (Replace mocks with real API)
-- **Phase 6:** Database integration and caching
+- **Phase 6:** Database integration and result persistence
 - **Phase 7:** Real-time collaboration features
+- **Phase 8:** Advanced visualization (3D terrain, flow animations)
 - **Phase 8:** User authentication and saved analyses
 - **Phase 9:** Advanced visualization (3D terrain, flow animations)
 - **Phase 10:** Machine learning for flow pattern prediction
