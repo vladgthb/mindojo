@@ -2,7 +2,7 @@
 
 A comprehensive web application for analyzing topographical data and determining optimal water flow patterns on islands using the Pacific-Atlantic water flow algorithm.
 
-![UI Screenshot](docs/images/ui-screenshot.png)
+![UI Screenshot](assets/UI.png)
 
 ## 🌊 Project Overview
 
@@ -27,9 +27,9 @@ Mindojo is a sophisticated full-stack application that analyzes topographical da
 
 ## 📸 Project Screenshots
 
-| Interface | API Documentation | Architecture |
-|-----------|-------------------|--------------|
-| ![UI](docs/images/ui-screenshot.png) | ![Swagger](docs/images/swagger-screenshot.png) | ![Architecture](docs/images/architecture-diagram.png) |
+| Interface            | API Documentation              | Architecture |
+|----------------------|--------------------------------|--------------|
+| ![UI](assets/UI.png) | ![Swagger](assets/SWAGGER.png) | ![Architecture](docs/images/architecture-diagram.png) |
 
 ## 🏗️ System Architecture
 
