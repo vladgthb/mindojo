@@ -25,6 +25,7 @@ A Node.js + Express backend server for the Mindojo project.
    ```
 
 4. Visit health check: http://localhost:3001/health
+5. View API documentation: http://localhost:3001/api-docs
 
 ## Available Scripts
 
@@ -72,3 +73,6 @@ backend/
 
 ### API Info
 - `GET /api` - Returns API information
+
+### Documentation
+- `GET /api-docs` - Swagger API documentation interface

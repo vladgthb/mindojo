@@ -7,6 +7,7 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Mindojo Backend Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`📚 API Docs: http://localhost:${PORT}/api-docs`);
 });
 
 // Graceful shutdown
