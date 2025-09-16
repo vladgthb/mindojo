@@ -1,6 +1,14 @@
 const googleSheetsService = require('../services/googleSheetsService');
 
 class SheetsController {
+  constructor() {
+    // Bind methods to preserve 'this' context when passed to Express routes
+    this.getSheetMetadata = this.getSheetMetadata.bind(this);
+    this.getSheetTabs = this.getSheetTabs.bind(this);
+    this.getTabContent = this.getTabContent.bind(this);
+    this.validateSheetAccess = this.validateSheetAccess.bind(this);
+  }
+
   async getSheetMetadata(req, res) {
     try {
       const { sheetId } = req.params;
