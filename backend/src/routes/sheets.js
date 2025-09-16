@@ -341,4 +341,156 @@ router.get('/:sheetId/tabs/:tabName/content', validateSheetId, validateTabName, 
  */
 router.post('/validate', sheetsController.validateSheetAccess);
 
+/**
+ * @swagger
+ * /api/sheets/parse-url:
+ *   post:
+ *     summary: Parse a Google Sheets URL and extract components
+ *     tags: [Google Sheets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - url
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: Google Sheets URL to parse
+ *                 example: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing"
+ *     responses:
+ *       200:
+ *         description: URL parsed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isValid:
+ *                   type: boolean
+ *                   description: Whether the URL is a valid Google Sheets URL
+ *                 sheetId:
+ *                   type: string
+ *                   description: Extracted Sheet ID
+ *                 tabName:
+ *                   type: string
+ *                   description: Extracted tab name (if present in URL)
+ *                 originalUrl:
+ *                   type: string
+ *                   description: Original URL provided
+ *                 isPublicLink:
+ *                   type: boolean
+ *                   description: Whether this appears to be a public sharing link
+ *                 accessType:
+ *                   type: string
+ *                   description: Detected access type
+ *                 generatedUrls:
+ *                   type: object
+ *                   description: Generated URLs in different formats
+ *       400:
+ *         description: Missing or invalid URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/parse-url', sheetsController.parseSheetUrl);
+
+/**
+ * @swagger
+ * /api/sheets/by-url:
+ *   post:
+ *     summary: Get sheet tabs by providing a Google Sheets URL
+ *     tags: [Google Sheets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - url
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: Google Sheets URL
+ *                 example: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing"
+ *     responses:
+ *       200:
+ *         description: Sheet tabs retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SheetTabs'
+ *                 - type: object
+ *                   properties:
+ *                     urlInfo:
+ *                       type: object
+ *                       description: Parsed URL information
+ *                     accessMethod:
+ *                       type: string
+ *                       description: How the sheet was accessed
+ *       400:
+ *         description: Missing or invalid URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/by-url', sheetsController.getSheetByUrl);
+
+/**
+ * @swagger
+ * /api/sheets/content-by-url:
+ *   post:
+ *     summary: Get tab content by providing a Google Sheets URL
+ *     tags: [Google Sheets]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - url
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: Google Sheets URL
+ *                 example: "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing"
+ *               tabName:
+ *                 type: string
+ *                 description: Specific tab name to fetch (optional, defaults to first tab)
+ *                 example: "Sheet1"
+ *     responses:
+ *       200:
+ *         description: Tab content retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/TabContent'
+ *                 - type: object
+ *                   properties:
+ *                     urlInfo:
+ *                       type: object
+ *                       description: Parsed URL information
+ *                     accessMethod:
+ *                       type: string
+ *                       description: How the sheet was accessed
+ *                     requestedTabName:
+ *                       type: string
+ *                       description: The tab name that was requested
+ *       400:
+ *         description: Missing or invalid URL
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/content-by-url', sheetsController.getTabContentByUrl);
+
 module.exports = router;

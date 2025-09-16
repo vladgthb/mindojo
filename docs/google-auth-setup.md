@@ -374,6 +374,8 @@ The current server-side approach provides the best balance of security, performa
 
 Once authentication is configured, these endpoints are available:
 
+### Traditional Sheet ID-based Endpoints
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/sheets/{sheetId}/metadata` | Get basic sheet information |
@@ -381,8 +383,19 @@ Once authentication is configured, these endpoints are available:
 | `GET` | `/api/sheets/{sheetId}/tabs/{tabName}/content` | Get all content from a specific tab |
 | `POST` | `/api/sheets/validate` | Validate access to a sheet |
 
-### Frontend Integration Example
+### URL-based Endpoints (New! 🆕)
 
+These endpoints accept Google Sheets sharing URLs directly:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/sheets/parse-url` | Parse a Google Sheets URL and extract components |
+| `POST` | `/api/sheets/by-url` | Get sheet tabs using a Google Sheets URL |
+| `POST` | `/api/sheets/content-by-url` | Get tab content using a Google Sheets URL |
+
+### Frontend Integration Examples
+
+#### Traditional Sheet ID Method
 ```javascript
 // Frontend code - works perfectly with CORS
 async function getSheetTabs(sheetId) {
@@ -398,6 +411,95 @@ async function getTabContent(sheetId, tabName) {
   return data.data; // 2D array of cell values
 }
 ```
+
+#### URL-based Method (New! 🆕)
+```javascript
+// Work with shared Google Sheets URLs directly
+async function getSheetByUrl(googleSheetsUrl) {
+  const response = await fetch('/api/sheets/by-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url: googleSheetsUrl })
+  });
+  const data = await response.json();
+  return data.tabs;
+}
+
+async function getContentByUrl(googleSheetsUrl, tabName = 'Sheet1') {
+  const response = await fetch('/api/sheets/content-by-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      url: googleSheetsUrl,
+      tabName: tabName 
+    })
+  });
+  const data = await response.json();
+  return data.data; // 2D array of cell values
+}
+
+// Parse a Google Sheets URL to extract information
+async function parseGoogleSheetsUrl(url) {
+  const response = await fetch('/api/sheets/parse-url', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url })
+  });
+  return response.json();
+}
+```
+
+#### Usage Examples
+```javascript
+// Example 1: Using a shared link
+const sharedUrl = "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing";
+const tabs = await getSheetByUrl(sharedUrl);
+const content = await getContentByUrl(sharedUrl, 'Data');
+
+// Example 2: Parse URL first, then use extracted ID
+const urlInfo = await parseGoogleSheetsUrl(sharedUrl);
+if (urlInfo.isValid) {
+  console.log('Sheet ID:', urlInfo.sheetId);
+  console.log('Is public link:', urlInfo.isPublicLink);
+  console.log('Access type:', urlInfo.accessType);
+}
+```
+
+### Supported Google Sheets URL Formats
+
+The API can extract Sheet IDs from various Google Sheets URL formats:
+
+```javascript
+// ✅ Supported URL formats:
+"https://docs.google.com/spreadsheets/d/SHEET_ID/edit"
+"https://docs.google.com/spreadsheets/d/SHEET_ID/edit?usp=sharing"
+"https://docs.google.com/spreadsheets/d/SHEET_ID/view"
+"https://docs.google.com/spreadsheets/d/SHEET_ID/edit#gid=123456"
+"https://docs.google.com/spreadsheets/d/SHEET_ID/export?format=csv"
+"https://docs.google.com/spreadsheets/u/0/d/SHEET_ID/edit"
+
+// ✅ Also accepts direct Sheet IDs:
+"1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+```
+
+### Access Requirements and Limitations
+
+#### ✅ What Works
+- **Public sheets** shared with "Anyone with the link can view"
+- **Sheets shared directly** with your service account email
+- **Organization sheets** if your service account has domain access
+- **Published sheets** that are publicly accessible
+
+#### ❌ What Doesn't Work
+- **Private sheets** not shared with your service account
+- **Sheets requiring authentication** from specific users
+- **Sheets with restricted domain** access only
+- **Sheets behind corporate firewalls**
+
+#### 🔐 Service Account Access
+Remember: Your service account (`mindojogooglesheetreading@mindojotasks.iam.gserviceaccount.com`) needs access to the sheet. Either:
+1. **Share the sheet** directly with the service account email, OR
+2. **Make the sheet publicly accessible** with a sharing link
 
 See the [Swagger documentation](http://localhost:3001/api-docs) for detailed request/response formats and examples.
 
