@@ -271,7 +271,7 @@ class WaterFlowService {
   /**
    * Generate flow paths for visualization
    */
-  _generateFlowPaths(grid, flowCells, config) {
+  _generateFlowPaths(grid, flowCells, _config) {
     // This is a placeholder for path generation
     // In a full implementation, we'd trace back paths from flow cells to ocean edges
     return {
@@ -362,7 +362,7 @@ class WaterFlowService {
    * @param {object} options - Analysis options
    * @returns {object} - Analysis results with sheet metadata
    */
-  async analyzeFromSheet(sheetId, tabName, options = {}) {
+  async analyzeFromSheet(sheetId, tabName, _options = {}) {
     try {
       // This will be implemented when we integrate with Google Sheets service
       throw new Error('Sheet analysis not yet implemented. Use analyzeWaterFlow with direct grid data.');

@@ -132,7 +132,7 @@ class WaterFlowController {
    */
   async analyzeFromSheetUrl(req, res) {
     try {
-      const { url, tabName, options = {} } = req.body;
+      const { url, tabName } = req.body;
 
       if (!url) {
         return res.status(400).json({

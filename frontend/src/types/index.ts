@@ -89,6 +89,27 @@ export interface WaterFlowResult {
     totalTime: number;
     timestamp: string;
   };
+  // Additional properties from backend response
+  requestInfo?: {
+    requestId: string;
+    totalProcessingTime: number;
+    timestamp: string;
+    inputSize: {
+      rows: number;
+      cols: number;
+      totalCells: number;
+    };
+  };
+  processingInfo?: {
+    requestId: string;
+    dataExtractionTime: number;
+    dataConversionTime: number;
+    algorithmTime: number;
+    totalTime: number;
+    timestamp: string;
+  };
+  accessMethod?: string;
+  urlInfo?: UrlInfo;
 }
 
 export interface UrlInfo {
