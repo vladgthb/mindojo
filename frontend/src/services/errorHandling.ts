@@ -17,15 +17,17 @@ export interface RetryOptions {
 }
 
 // Error categories for different handling strategies
-export enum ErrorCategory {
-  NETWORK = 'network',
-  AUTHENTICATION = 'auth',
-  VALIDATION = 'validation',
-  RATE_LIMIT = 'rate_limit',
-  SERVER_ERROR = 'server',
-  NOT_FOUND = 'not_found',
-  UNKNOWN = 'unknown'
-}
+export const ErrorCategory = {
+  NETWORK: 'network',
+  AUTHENTICATION: 'auth', 
+  VALIDATION: 'validation',
+  RATE_LIMIT: 'rate_limit',
+  SERVER_ERROR: 'server',
+  NOT_FOUND: 'not_found',
+  UNKNOWN: 'unknown'
+} as const;
+
+export type ErrorCategory = typeof ErrorCategory[keyof typeof ErrorCategory];
 
 // Map error codes to categories
 const ERROR_CATEGORY_MAP: Record<string, ErrorCategory> = {
@@ -126,11 +128,12 @@ class ErrorHandler {
     }
 
     const category = this.getErrorCategory(error);
-    return [
+    const retryableCategories = [
       ErrorCategory.NETWORK,
       ErrorCategory.RATE_LIMIT,
       ErrorCategory.SERVER_ERROR
-    ].includes(category);
+    ];
+    return retryableCategories.includes(category as any);
   }
 
   // Get retry delay based on error type
@@ -225,11 +228,11 @@ class ErrorHandler {
   private getErrorSeverity(error: ApiError): 'error' | 'warning' | 'info' {
     const category = this.getErrorCategory(error);
     
-    if ([ErrorCategory.SERVER_ERROR, ErrorCategory.NETWORK].includes(category)) {
+    if (category === ErrorCategory.SERVER_ERROR || category === ErrorCategory.NETWORK) {
       return 'error';
     }
     
-    if ([ErrorCategory.RATE_LIMIT, ErrorCategory.AUTHENTICATION].includes(category)) {
+    if (category === ErrorCategory.RATE_LIMIT || category === ErrorCategory.AUTHENTICATION) {
       return 'warning';
     }
     

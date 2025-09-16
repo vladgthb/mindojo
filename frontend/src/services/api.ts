@@ -10,6 +10,9 @@ export {
   isRetryableError
 } from './apiClient';
 
+// Import types for use in functions
+import type { ApiResponse, ApiError } from './apiClient';
+
 // Response helpers for backward compatibility
 export const isApiError = <T>(response: ApiResponse<T>): response is { error: ApiError } => {
   return 'error' in response && response.error !== undefined;
