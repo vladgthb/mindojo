@@ -76,7 +76,33 @@ app.get('/health', (req, res) => {
  *               $ref: '#/components/schemas/ApiResponse'
  */
 app.get('/api', (req, res) => {
-  res.json({ message: 'Mindojo API Server - Phase 2 (Google Sheets Integration)' });
+  res.json({ 
+    message: 'Mindojo API Server - Phase 2 Complete ✅', 
+    phase: 2,
+    status: 'completed',
+    features: [
+      'Google Sheets API Integration',
+      'Service Account Authentication', 
+      'Shared URL Support',
+      'Base64 Credentials Support',
+      'Comprehensive API Documentation'
+    ],
+    endpoints: {
+      traditional: [
+        'GET /api/sheets/{id}/metadata',
+        'GET /api/sheets/{id}/tabs', 
+        'GET /api/sheets/{id}/tabs/{name}/content',
+        'POST /api/sheets/validate'
+      ],
+      urlBased: [
+        'POST /api/sheets/parse-url',
+        'POST /api/sheets/by-url',
+        'POST /api/sheets/tabs-from-url',
+        'POST /api/sheets/content-by-url'
+      ]
+    },
+    documentation: '/api-docs'
+  });
 });
 
 // 404 handler
