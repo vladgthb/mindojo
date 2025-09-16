@@ -8,44 +8,57 @@ class GoogleAuthClient {
 
   async initialize() {
     try {
-      const {
-        GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        GOOGLE_PRIVATE_KEY,
-        GOOGLE_PROJECT_ID
-      } = process.env;
-
-      if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY || !GOOGLE_PROJECT_ID) {
-        throw new Error('Missing required Google service account credentials');
+      // Method 1: Base64-encoded service account JSON (Recommended)
+      if (process.env.GOOGLE_SERVICE_ACCOUNT_BASE64) {
+        const serviceAccountJson = Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
+        const credentials = JSON.parse(serviceAccountJson);
+        
+        this.auth = new google.auth.GoogleAuth({
+          credentials,
+          scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
+        });
       }
+      // Method 2: Individual environment variables (Legacy)
+      else {
+        const {
+          GOOGLE_SERVICE_ACCOUNT_EMAIL,
+          GOOGLE_PRIVATE_KEY,
+          GOOGLE_PROJECT_ID
+        } = process.env;
 
-      // Handle different private key formats
-      let privateKey = GOOGLE_PRIVATE_KEY;
-      
-      // If the key looks like it's base64 encoded, decode it
-      if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-        try {
-          privateKey = Buffer.from(privateKey, 'base64').toString('utf8');
-        } catch (e) {
-          // If base64 decode fails, continue with original key
+        if (!GOOGLE_SERVICE_ACCOUNT_EMAIL || !GOOGLE_PRIVATE_KEY || !GOOGLE_PROJECT_ID) {
+          throw new Error('Missing required Google service account credentials. Use either GOOGLE_SERVICE_ACCOUNT_BASE64 or individual variables.');
         }
-      }
-      
-      // Replace escaped newlines with actual newlines
-      privateKey = privateKey.replace(/\\n/g, '\n');
-      
-      // Ensure proper formatting
-      if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
-        throw new Error('Invalid private key format. Must include -----BEGIN PRIVATE KEY----- header');
-      }
 
-      this.auth = new google.auth.GoogleAuth({
-        credentials: {
-          client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
-          private_key: privateKey,
-          project_id: GOOGLE_PROJECT_ID
-        },
-        scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
-      });
+        // Handle different private key formats
+        let privateKey = GOOGLE_PRIVATE_KEY;
+        
+        // If the key looks like it's base64 encoded, decode it
+        if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+          try {
+            privateKey = Buffer.from(privateKey, 'base64').toString('utf8');
+          } catch (e) {
+            // If base64 decode fails, continue with original key
+          }
+        }
+        
+        // Replace escaped newlines with actual newlines
+        privateKey = privateKey.replace(/\\n/g, '\n');
+        
+        // Ensure proper formatting
+        if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+          throw new Error('Invalid private key format. Must include -----BEGIN PRIVATE KEY----- header');
+        }
+
+        this.auth = new google.auth.GoogleAuth({
+          credentials: {
+            client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            private_key: privateKey,
+            project_id: GOOGLE_PROJECT_ID
+          },
+          scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly']
+        });
+      }
 
       this.sheets = google.sheets({ version: 'v4', auth: this.auth });
       
@@ -77,6 +90,28 @@ class GoogleAuthClient {
   }
 
   validateCredentials() {
+    // Method 1: Base64-encoded service account JSON (Recommended)
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_BASE64) {
+      try {
+        const serviceAccountJson = Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
+        const credentials = JSON.parse(serviceAccountJson);
+        
+        const requiredFields = ['client_email', 'private_key', 'project_id'];
+        const hasAllFields = requiredFields.every(field => credentials[field]);
+        
+        if (!hasAllFields) {
+          console.error('Base64 service account missing required fields:', requiredFields);
+          return false;
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Invalid Base64 service account credentials:', error.message);
+        return false;
+      }
+    }
+    
+    // Method 2: Individual environment variables (Legacy)
     const {
       GOOGLE_SERVICE_ACCOUNT_EMAIL,
       GOOGLE_PRIVATE_KEY,

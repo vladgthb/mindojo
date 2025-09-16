@@ -140,24 +140,58 @@ Extract these **three key values**:
 
 ### 6. Configure Environment Variables
 
+We support two methods for configuring Google Service Account credentials. **Method 1 (Base64) is strongly recommended** as it eliminates formatting issues.
+
+#### Method 1: Base64 Service Account JSON (Recommended ✅)
+
 1. **Create environment file** (if not exists):
    ```bash
    cd backend
    cp .env.example .env
    ```
 
-2. **Edit the `.env` file** with your actual credentials:
+2. **Convert your service account JSON to Base64**:
    ```bash
-   # Google Sheets API (Phase 2)
+   # Use the provided utility script
+   node scripts/encode-service-account.js path/to/your-service-account.json
+   
+   # Or manually with base64 command
+   base64 -i path/to/your-service-account.json
+   ```
+
+3. **Add the Base64 value to `.env`**:
+   ```bash
+   # Google Sheets API (Phase 2) - Base64 Method
+   GOOGLE_SERVICE_ACCOUNT_BASE64=ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAi...
+   ```
+
+#### Method 2: Individual Variables (Legacy)
+
+**Only use this method if Base64 doesn't work for your setup.**
+
+1. **Edit the `.env` file** with individual credentials:
+   ```bash
+   # Google Sheets API (Phase 2) - Individual Variables
    GOOGLE_SERVICE_ACCOUNT_EMAIL=mindojo-sheets-service@your-project-123456.iam.gserviceaccount.com
    GOOGLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...\n-----END PRIVATE KEY-----
    GOOGLE_PROJECT_ID=your-project-123456
    ```
 
-3. **Important formatting notes**:
+2. **Important formatting notes**:
    - Keep the `\n` characters in the private key
    - Include the complete `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` markers
    - No quotes around the values in the .env file
+
+#### Quick Setup with the Encoding Script
+
+```bash
+# 1. Run the encoding utility
+node scripts/encode-service-account.js ~/Downloads/your-service-account.json
+
+# 2. Copy the output to your .env file
+# 3. Restart the server
+npm run dev
+```
 
 ### 7. Grant Sheet Access to Service Account
 
