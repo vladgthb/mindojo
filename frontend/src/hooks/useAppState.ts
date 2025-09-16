@@ -16,6 +16,8 @@ const initialState: AppState = {
     isValidating: false,
     error: null,
   },
+  tabResultsCache: {},
+  loadingTabs: new Set(),
 };
 
 export const useAppState = () => {
@@ -77,12 +79,17 @@ export const useAppState = () => {
   }, []);
 
   const setSelectedTab = useCallback((tabName: string | null) => {
-    setState(prev => ({
-      ...prev,
-      selectedTab: tabName,
-      // Clear analysis results when changing tabs
-      analysisResults: null,
-    }));
+    setState(prev => {
+      // If we have cached results for this tab, load them instead of clearing
+      const cachedResult = tabName ? prev.tabResultsCache[tabName] : null;
+      
+      return {
+        ...prev,
+        selectedTab: tabName,
+        // Load cached results if available, otherwise clear
+        analysisResults: cachedResult || null,
+      };
+    });
   }, []);
 
   // Loading states
@@ -109,12 +116,58 @@ export const useAppState = () => {
 
   // Analysis results
   const setAnalysisResults = useCallback((results: WaterFlowResult | null) => {
-    setState(prev => ({ ...prev, analysisResults: results }));
+    setState(prev => {
+      const newState = { ...prev, analysisResults: results };
+      
+      // Cache the results if we have a selected tab and results
+      if (results && prev.selectedTab) {
+        newState.tabResultsCache = {
+          ...prev.tabResultsCache,
+          [prev.selectedTab]: results
+        };
+      }
+      
+      return newState;
+    });
+  }, []);
+
+  // Cache management
+  const clearTabCache = useCallback((tabName?: string) => {
+    setState(prev => {
+      if (tabName) {
+        // Clear specific tab cache
+        const { [tabName]: removed, ...remainingCache } = prev.tabResultsCache;
+        return { ...prev, tabResultsCache: remainingCache };
+      } else {
+        // Clear all cache
+        return { ...prev, tabResultsCache: {} };
+      }
+    });
+  }, []);
+
+  const hasTabCache = useCallback((tabName: string) => {
+    return Boolean(state.tabResultsCache[tabName]);
+  }, [state.tabResultsCache]);
+
+  // Tab loading state management
+  const setTabLoading = useCallback((tabName: string, loading: boolean) => {
+    setState(prev => {
+      const newLoadingTabs = new Set(prev.loadingTabs);
+      if (loading) {
+        newLoadingTabs.add(tabName);
+      } else {
+        newLoadingTabs.delete(tabName);
+      }
+      return { ...prev, loadingTabs: newLoadingTabs };
+    });
   }, []);
 
   // Reset state
   const resetState = useCallback(() => {
-    setState(initialState);
+    setState({
+      ...initialState,
+      loadingTabs: new Set(), // Create new Set instance
+    });
     setSearchParams({});
   }, [setSearchParams]);
 
@@ -146,6 +199,11 @@ export const useAppState = () => {
     setUrlValidation,
     setAnalysisResults,
     resetState,
+    
+    // Cache management
+    clearTabCache,
+    hasTabCache,
+    setTabLoading,
     
     // Computed properties
     canAnalyze,

@@ -46,11 +46,17 @@ function App() {
     sheetUrl,
     selectedTab,
     isLoading: appLoading,
+    tabResultsCache,
+    loadingTabs,
     setSheetUrl,
     setSelectedTab,
     setLoading: setAppLoading,
     setError: setAppError,
     setUrlValidation,
+    setAnalysisResults,
+    hasTabCache,
+    setTabLoading,
+    clearTabCache,
     canAnalyze,
     resetState
   } = useAppState();
@@ -136,17 +142,38 @@ function App() {
     }
   }, [loadTabs, setAppLoading, setAppError, clearSheetError, clearAnalysisError]);
 
-  // Analysis handler
+  // Analysis handler with caching
   const handleRunAnalysis = useCallback(async () => {
     if (!sheetUrl || !selectedTab) return;
 
-    setAppLoading(true);
+    // Check if we already have cached results for this tab
+    if (hasTabCache(selectedTab)) {
+      setSnackbar({
+        open: true,
+        message: `Loaded cached results for "${selectedTab}" tab.`,
+        severity: 'info'
+      });
+      return; // Results are already loaded via cache
+    }
+
+    // Check if this tab is already being analyzed
+    if (loadingTabs.has(selectedTab)) {
+      setSnackbar({
+        open: true,
+        message: `Analysis for "${selectedTab}" is already in progress.`,
+        severity: 'warning'
+      });
+      return;
+    }
+
+    setTabLoading(selectedTab, true);
     clearAnalysisError();
 
     try {
       const result = await analyzeFromUrl(sheetUrl, selectedTab);
       
       if (result) {
+        setAnalysisResults(result); // This will cache the result
         setSnackbar({
           open: true,
           message: `Analysis complete! Found ${result.cells.length} qualifying cells.`,
@@ -160,13 +187,23 @@ function App() {
         severity: 'error'
       });
     } finally {
-      setAppLoading(false);
+      setTabLoading(selectedTab, false);
     }
-  }, [sheetUrl, selectedTab, analyzeFromUrl, setAppLoading, clearAnalysisError]);
+  }, [
+    sheetUrl, 
+    selectedTab, 
+    analyzeFromUrl, 
+    hasTabCache, 
+    loadingTabs,
+    setTabLoading,
+    setAnalysisResults,
+    clearAnalysisError
+  ]);
 
   // Reset handler
   const handleReset = useCallback(() => {
     resetState();
+    clearTabCache(); // Clear all cached results
     clearSheetError();
     clearAnalysisError();
     setSnackbar({
@@ -174,7 +211,7 @@ function App() {
       message: 'Application reset successfully',
       severity: 'info'
     });
-  }, [resetState, clearSheetError, clearAnalysisError]);
+  }, [resetState, clearTabCache, clearSheetError, clearAnalysisError]);
 
   // Demo mode notification
   const usingMockData = useSheetMockData || useAnalysisMockData;
@@ -244,10 +281,15 @@ function App() {
                     size="large"
                     startIcon={<PlayIcon />}
                     onClick={handleRunAnalysis}
-                    disabled={isAnalyzing || appLoading}
+                    disabled={isAnalyzing || appLoading || (selectedTab && loadingTabs.has(selectedTab))}
                     sx={{ minWidth: 200 }}
                   >
-                    {isAnalyzing ? 'Analyzing...' : 'Run Water Flow Analysis'}
+                    {selectedTab && loadingTabs.has(selectedTab) 
+                      ? 'Analyzing...' 
+                      : selectedTab && hasTabCache(selectedTab)
+                      ? 'Load Cached Results'
+                      : 'Run Water Flow Analysis'
+                    }
                   </Button>
                   
                   <Button
@@ -263,7 +305,10 @@ function App() {
                 
                 {selectedTab && (
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Ready to analyze "{selectedTab}" tab
+                    {hasTabCache(selectedTab) 
+                      ? `Cached results available for "${selectedTab}" tab`
+                      : `Ready to analyze "${selectedTab}" tab`
+                    }
                   </Typography>
                 )}
               </Paper>

@@ -149,6 +149,10 @@ export interface AppState {
     isValidating: boolean;
     error: string | null;
   };
+  // Cache analysis results by tab to avoid re-analyzing when switching tabs
+  tabResultsCache: { [tabName: string]: WaterFlowResult };
+  // Track which tabs are currently loading
+  loadingTabs: Set<string>;
 }
 
 export interface GridVisualizationProps {
