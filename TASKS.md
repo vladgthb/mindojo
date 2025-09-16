@@ -447,14 +447,292 @@ Optimization: Reverse BFS from ocean borders instead of cell-by-cell analysis
 
 ---
 
+### Phase 4 📋 (Planned)
+**React + TypeScript Frontend with Grid Visualization**
+
+**Objective:** Create a modern web interface for Island Water Flow Analysis using React + Vite + TypeScript + MUI, with URL input, dynamic tab selection, and interactive grid visualization.
+
+#### Project Setup & Structure
+Create `frontend/` directory with modern React stack:
+- **React 18** with TypeScript for type safety
+- **Vite** as build tool for fast development
+- **MUI (Material-UI)** for consistent UI components
+- **Node.js >=22** requirement matching backend
+- **URL-based state management** for shareable analysis links
+
+#### Step 1: Project Initialization
+- [ ] Create `frontend/` directory structure
+- [ ] Initialize Vite + React + TypeScript project
+- [ ] Configure Node.js >=22 requirement in `package.json`
+- [ ] Install and configure MUI components and theming
+- [ ] Set up TypeScript strict mode configuration
+- [ ] Configure Vite for development and production builds
+- [ ] Add ESLint and Prettier for consistent code formatting
+
+#### Step 2: Project Structure & Architecture
+```
+frontend/
+├── src/
+│   ├── components/           # Reusable UI components
+│   │   ├── common/          # Generic components
+│   │   ├── forms/           # Form-related components
+│   │   ├── visualization/   # Grid visualization components
+│   │   └── layout/          # Layout components
+│   ├── pages/               # Main application pages
+│   ├── hooks/               # Custom React hooks
+│   ├── services/            # API integration services
+│   ├── types/               # TypeScript type definitions
+│   ├── utils/               # Utility functions
+│   ├── mocks/               # Mock data for development
+│   └── theme/               # MUI theme configuration
+├── public/                  # Static assets
+├── tests/                   # Component and integration tests
+└── package.json             # Dependencies and scripts
+```
+
+#### Step 3: Core UI Components with MUI
+**Header Component:**
+- [ ] Create `AppHeader` with "Island Water Flow Analysis" title
+- [ ] Implement MUI AppBar with responsive design
+- [ ] Add branding and navigation elements
+- [ ] Include theme toggle (light/dark mode support)
+
+**URL Input Section:**
+- [ ] Create `UrlInputForm` component with MUI TextField
+- [ ] Implement URL validation with TypeScript types
+- [ ] Add real-time validation feedback (error states, success indicators)
+- [ ] Support Google Sheets URL format validation
+- [ ] Include loading states for URL processing
+
+**Dynamic Tab Selection:**
+- [ ] Create `TabSelector` component with MUI Select/Autocomplete
+- [ ] Implement dynamic population from API responses
+- [ ] Add loading skeleton while fetching tabs
+- [ ] Handle empty states and error conditions
+- [ ] Include tab metadata display (row/column counts)
+
+#### Step 4: State Management & URL Integration
+**React State Architecture:**
+- [ ] Implement URL-based state management using `useSearchParams`
+- [ ] Create custom hooks for state persistence
+- [ ] Add `useUrlState` hook for shareable analysis links
+- [ ] Implement `useSheetData` hook for Google Sheets integration
+- [ ] Add `useWaterFlowAnalysis` hook for algorithm results
+
+**State Structure:**
+```typescript
+interface AppState {
+  sheetUrl: string | null;
+  selectedTab: string | null;
+  isLoading: boolean;
+  tabs: SheetTab[];
+  analysisResults: WaterFlowResult | null;
+  error: string | null;
+}
+```
+
+#### Step 5: API Integration Services
+**Service Layer:**
+- [ ] Create `sheetsService.ts` for Google Sheets API calls
+- [ ] Implement `waterFlowService.ts` for analysis API integration
+- [ ] Add `mockService.ts` for development with realistic mock data
+- [ ] Create TypeScript interfaces matching backend API responses
+- [ ] Add error handling and retry logic
+- [ ] Implement request caching for improved performance
+
+**Mock Data Implementation:**
+- [ ] Create comprehensive mock datasets for development
+- [ ] Include various grid sizes (5x5, 10x10, 20x20)
+- [ ] Add realistic topographical elevation data
+- [ ] Mock multiple sheet tabs with different scenarios
+- [ ] Include edge cases (uniform heights, extreme values)
+
+#### Step 6: Grid Visualization Components
+**GridVisualization Component:**
+- [ ] Create interactive grid display using CSS Grid or Canvas
+- [ ] Implement color-coded cell rendering:
+  - **Grey cells**: Regular terrain (non-qualifying)
+  - **Blue cells**: Qualifying cells (water reaches both oceans)
+  - **Elevation gradient**: Optional height-based coloring
+- [ ] Add hover effects showing cell coordinates and elevation
+- [ ] Implement responsive grid sizing for different screen sizes
+- [ ] Add zoom and pan functionality for large grids
+
+**Visualization Features:**
+- [ ] **Cell Tooltips**: Show coordinates, elevation, flow status
+- [ ] **Legend Component**: Explain color coding and grid features
+- [ ] **Grid Statistics**: Display analysis results summary
+- [ ] **Export Options**: Save visualization as PNG/SVG
+- [ ] **Animation**: Optional flow path animation
+
+#### Step 7: Results Display Components
+**Results Section:**
+- [ ] Create `AnalysisResults` component for displaying results
+- [ ] Implement `ResultsTable` with sortable coordinates table
+- [ ] Add `StatsSummary` showing qualified cell count and percentage
+- [ ] Create `QualifyingCellsList` with MUI DataGrid
+- [ ] Include pagination for large result sets
+
+**Results Features:**
+- [ ] **Sortable Table**: Sort by row, column, or elevation
+- [ ] **Search/Filter**: Find specific coordinates
+- [ ] **Export Options**: Download results as CSV/JSON
+- [ ] **Copy to Clipboard**: Share coordinates list
+- [ ] **Results Persistence**: Save analysis in browser storage
+
+#### Step 8: User Experience & Interactions
+**Progressive Enhancement:**
+- [ ] Implement progressive loading states
+- [ ] Add skeleton loading for all components
+- [ ] Create smooth transitions between states
+- [ ] Add success/error notifications using MUI Snackbar
+- [ ] Implement optimistic UI updates
+
+**Responsive Design:**
+- [ ] Mobile-first responsive design approach
+- [ ] Tablet and desktop optimized layouts
+- [ ] Grid visualization adapts to screen size
+- [ ] Touch-friendly interactions for mobile
+- [ ] Accessibility compliance (WCAG 2.1)
+
+#### Step 9: Development Tools & Testing
+**Development Setup:**
+- [ ] Configure hot module replacement (HMR)
+- [ ] Add development proxy for backend API calls
+- [ ] Set up environment variables for API endpoints
+- [ ] Create development scripts for mock data testing
+- [ ] Add TypeScript strict mode and error checking
+
+**Testing Strategy:**
+- [ ] Unit tests for utility functions and hooks
+- [ ] Component testing with React Testing Library
+- [ ] Integration tests for user workflows
+- [ ] Visual regression testing for grid visualization
+- [ ] Accessibility testing with axe-core
+
+#### Step 10: Build & Deployment Configuration
+**Build Optimization:**
+- [ ] Configure Vite for optimized production builds
+- [ ] Implement code splitting for better performance
+- [ ] Add bundle analysis tools
+- [ ] Optimize asset loading and caching
+- [ ] Configure environment-specific builds
+
+**Deployment Ready:**
+- [ ] Create Docker configuration for containerized deployment
+- [ ] Add CI/CD pipeline configuration
+- [ ] Configure static file serving
+- [ ] Add health check endpoints
+- [ ] Implement error boundaries for graceful error handling
+
+## Technical Implementation Specifications
+
+### Component Architecture:
+```typescript
+// Main App Component Structure
+App
+├── AppHeader
+├── UrlInputSection
+│   ├── UrlInputForm
+│   └── ValidationFeedback
+├── TabSelection
+│   ├── TabSelector
+│   └── TabInfo
+├── AnalysisSection
+│   ├── RunAnalysisButton
+│   └── ProgressIndicator
+└── ResultsDisplay
+    ├── StatsSummary
+    ├── GridVisualization
+    └── ResultsTable
+```
+
+### TypeScript Interfaces:
+```typescript
+interface SheetTab {
+  id: number;
+  name: string;
+  rowCount: number;
+  columnCount: number;
+}
+
+interface WaterFlowResult {
+  cells: Array<{x: number, y: number}>;
+  stats: {
+    totalCells: number;
+    flowCells: number;
+    coverage: number;
+  };
+  grid: number[][]; // Elevation data
+}
+
+interface GridVisualizationProps {
+  grid: number[][];
+  qualifyingCells: Array<{x: number, y: number}>;
+  onCellHover: (cell: {x: number, y: number, elevation: number}) => void;
+}
+```
+
+### Mock Data Examples:
+```typescript
+// Sample mock data structure
+const mockSheetData = {
+  tabs: [
+    { id: 0, name: "Island_5x5", rowCount: 5, columnCount: 5 },
+    { id: 1, name: "Mountain_10x10", rowCount: 10, columnCount: 10 },
+    { id: 2, name: "Valley_20x20", rowCount: 20, columnCount: 20 }
+  ]
+};
+
+const mockAnalysisResult = {
+  cells: [
+    {x: 0, y: 4}, {x: 1, y: 3}, {x: 2, y: 2}
+  ],
+  stats: {
+    totalCells: 25,
+    flowCells: 3,
+    coverage: 0.12
+  },
+  grid: [
+    [1, 2, 2, 3, 5],
+    [3, 2, 3, 4, 4], 
+    [2, 4, 5, 3, 1],
+    [6, 7, 1, 4, 5],
+    [5, 1, 1, 2, 4]
+  ]
+};
+```
+
+### User Flow:
+1. **Landing**: User sees header and URL input field
+2. **URL Entry**: User pastes Google Sheets URL with validation
+3. **Tab Loading**: System fetches and displays available tabs
+4. **Tab Selection**: User selects tab from dropdown
+5. **Analysis**: "Run Analysis" button appears and executes
+6. **Results**: Grid visualization and results table display
+7. **Interaction**: User can explore results, export data
+
+### Features for Phase 4:
+- ✅ **Modern React Stack**: Vite + TypeScript + MUI
+- ✅ **URL Validation**: Real-time Google Sheets URL validation
+- ✅ **Dynamic Tabs**: Auto-populated dropdown from API
+- ✅ **Grid Visualization**: Interactive terrain and qualifying cells
+- ✅ **Results Display**: Count, coordinates table, statistics
+- ✅ **Mock Data**: Comprehensive test scenarios
+- ✅ **Responsive Design**: Mobile-first approach
+- ✅ **TypeScript**: Full type safety and development experience
+
+---
+
 ### Future Phases 🔮 (To Be Planned)
 
 **Potential upcoming phases:**
-- **Phase 4:** Database integration and caching
-- **Phase 5:** Real-time updates and webhooks
-- **Phase 6:** User authentication and authorization
-- **Phase 7:** Advanced data transformation features
-- **Phase 8:** Machine learning for flow pattern prediction
+- **Phase 5:** Backend-Frontend Integration (Replace mocks with real API)
+- **Phase 6:** Database integration and caching
+- **Phase 7:** Real-time collaboration features
+- **Phase 8:** User authentication and saved analyses
+- **Phase 9:** Advanced visualization (3D terrain, flow animations)
+- **Phase 10:** Machine learning for flow pattern prediction
 
 ---
 
